@@ -34,8 +34,8 @@
 	on:mousemove={handleMouseMove}
 	bind:this={container}
 >
-	<div class="zoomable flexbox" bind:this={zoomable} style="transform-origin: 0 0;">
-		<div style="position: absolute; left: 10px" />
+	<div class="zoomable flexbox" bind:this={zoomable} style="">
+		<div style="position: absolute; left: 10px; " />
 		<div>
 			Scroll in me. <br />
 			{location?.x}, {location?.y}<br />
@@ -98,8 +98,12 @@
 	.container {
 		border: 3px solid red;
 		height: 600px;
+		width: 600px;
 		overflow: hidden;
 		touch-action: none;
+		position: relative;
+		top: 20px;
+		left: 100px;
 	}
 	.zoomable {
 		border: 4px dashed blue;
