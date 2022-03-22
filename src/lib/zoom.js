@@ -135,7 +135,7 @@ export const zoom = (container, params = {}) => {
 			scale_factor
 		);
 		scale.value = mat.d;
-		target.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.d})`;
+		target.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
 	}
 	function fireScaleMove(touchA, touchB, e) {
 		const hypo = getDistance(touchA, touchB);
@@ -163,7 +163,7 @@ export const zoom = (container, params = {}) => {
 			scale.value * xFactor,
 			f
 		);
-		target.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.d})`;
+		target.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
 		scale.value = mat.d;
 		scale.lastHypo = hypo;
 		scale.scaling = true;
@@ -189,7 +189,7 @@ export const zoom = (container, params = {}) => {
 			scale.value * xFactor,
 			dir
 		);
-		target.style.transform = `translate(${mat.e}px,${mat.f}px) scale(${mat.d})`;
+		target.style.transform = `translate(${mat.e}px,${mat.f}px) scale(${mat.a})`;
 		scale.value = mat.d;
 	}
 
