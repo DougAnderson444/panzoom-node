@@ -111,7 +111,6 @@
 		width: 100%;
 		/* margin: 1em; */
 		position: relative;
-		transition: transform 0.3s;
 	}
 	.flexbox {
 		display: flex;

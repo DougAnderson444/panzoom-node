@@ -117,10 +117,12 @@ export const zoom = (container, params = {}) => {
 		const yFactor = (xFactor * container.clientHeight) / container.clientWidth;
 		let in_x = (container.clientWidth - ratio.width * Math.max(xFactor * scaleVtm, 1)) / 2;
 		let in_y = (container.clientHeight - ratio.height * Math.max(xFactor * scaleVtm, 1)) / 2;
+
 		const origin = {
-			x: in_x > 0 ? container.clientWidth / 2 : x,
-			y: in_y > 0 ? container.clientHeight / 2 : y
+			x: x - container.clientWidth / 2 - container.offsetLeft,
+			y: y - container.clientHeight / 2 - container.offsetTop
 		};
+
 		const mat = matrix.scale(
 			xFactor,
 			yFactor,
@@ -144,10 +146,12 @@ export const zoom = (container, params = {}) => {
 		const yFactor = (xFactor * container.clientHeight) / container.clientWidth;
 		let in_x = (container.clientWidth - ratio.width * matrix.vtm.a) / 2;
 		let in_y = (container.clientHeight - ratio.height * matrix.vtm.a) / 2;
+
 		const origin = {
-			x: in_x > 0 ? container.clientWidth / 2 : scale.originX,
-			y: in_y > 0 ? container.clientHeight / 2 : scale.originY
+			x: scale.originX - container.clientWidth / 2 - container.offsetLeft,
+			y: scale.originY - container.clientHeight / 2 - container.offsetTop
 		};
+
 		const mat = matrix.scale(
 			xFactor,
 			yFactor,
@@ -173,6 +177,7 @@ export const zoom = (container, params = {}) => {
 			x: container.clientWidth / 2,
 			y: container.clientHeight / 2
 		};
+
 		const mat = matrix.scale(
 			xFactor,
 			yFactor,
