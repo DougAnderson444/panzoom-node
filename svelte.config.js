@@ -19,7 +19,7 @@ const config = {
 		},
 		paths: {
 			// change below to your repo name
-			base: process.env.NODE_ENV === 'production' ? '/svelte-connectables' : ''
+			base: process.env.NODE_ENV === 'production' ? '/svelte-zoom-action' : ''
 		},
 		vite: () => ({
 			build: {
