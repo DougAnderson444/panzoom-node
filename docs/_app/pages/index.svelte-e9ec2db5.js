@@ -170,12 +170,12 @@ const zoom = (container, params = {}) => {
     let in_x = (container.clientWidth - ratio.width * Math.max(xFactor * scaleVtm, 1)) / 2;
     let in_y = (container.clientHeight - ratio.height * Math.max(xFactor * scaleVtm, 1)) / 2;
     const origin = {
-      x: in_x > 0 ? container.clientWidth / 2 : x,
-      y: in_y > 0 ? container.clientHeight / 2 : y
+      x: x - container.clientWidth / 2 - container.offsetLeft,
+      y: y - container.clientHeight / 2 - container.offsetTop
     };
     const mat = matrix.scale(xFactor, yFactor, origin, in_x, in_y, ratio, scale.max, scale.value * xFactor, scale_factor);
     scale.value = mat.d;
-    target.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.d})`;
+    target.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
   }
   function fireScaleMove(touchA, touchB, e) {
     const hypo = getDistance(touchA, touchB);
@@ -187,11 +187,11 @@ const zoom = (container, params = {}) => {
     let in_x = (container.clientWidth - ratio.width * matrix.vtm.a) / 2;
     let in_y = (container.clientHeight - ratio.height * matrix.vtm.a) / 2;
     const origin = {
-      x: in_x > 0 ? container.clientWidth / 2 : scale.originX,
-      y: in_y > 0 ? container.clientHeight / 2 : scale.originY
+      x: scale.originX - container.clientWidth / 2 - container.offsetLeft,
+      y: scale.originY - container.clientHeight / 2 - container.offsetTop
     };
     const mat = matrix.scale(xFactor, yFactor, origin, in_x, in_y, ratio, scale.max, scale.value * xFactor, f);
-    target.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.d})`;
+    target.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
     scale.value = mat.d;
     scale.lastHypo = hypo;
     scale.scaling = true;
@@ -667,9 +667,9 @@ function create_fragment(ctx) {
     h() {
       set_style(div0, "position", "absolute");
       set_style(div0, "left", "10px");
-      attr(div2, "class", "zoomable flexbox svelte-1jz2pe");
+      attr(div2, "class", "zoomable flexbox svelte-1x869o4");
       attr(div2, "style", "");
-      attr(div3, "class", "container svelte-1jz2pe");
+      attr(div3, "class", "container svelte-1x869o4");
     },
     m(target, anchor) {
       insert_hydration(target, div3, anchor);
@@ -808,4 +808,4 @@ class Routes extends SvelteComponent {
   }
 }
 export { Routes as default };
-//# sourceMappingURL=index.svelte-976b8c6d.js.map
+//# sourceMappingURL=index.svelte-e9ec2db5.js.map
