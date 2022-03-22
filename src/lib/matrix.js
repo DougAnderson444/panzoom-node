@@ -98,16 +98,15 @@ export default class Matrix {
 		// 	this.stop = false;
 		// }
 
-		console.log(origin.x, origin.y, { vtm: this.vtm });
 		this.vtm = this.createMatrix()
-			.translate(origin.x, -origin.y)
+			.translate(origin.x, origin.y)
 			.scale(xFactor, yFactor)
-			.translate(-origin.x, origin.y)
+			.translate(-origin.x, -origin.y)
 			.multiply(this.vtm);
 
 		let pre_scale = Math.min(Math.max(1, this.vtm.a), max);
 
-		this.clamp(pre_scale, in_x, in_y, ratio);
+		// this.clamp(pre_scale, in_x, in_y, ratio); // doesn't allow us to zoom into corners.. :/
 
 		return this.vtm;
 	}
