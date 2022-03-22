@@ -106,7 +106,8 @@ export default class Matrix {
 
 		let pre_scale = Math.min(Math.max(1, this.vtm.a), max);
 
-		// this.clamp(pre_scale, in_x, in_y, ratio); // doesn't allow us to zoom into corners.. :/
+		// V V V V doesn't allow us to zoom into corners.. :/
+		// this.clamp(pre_scale, in_x, in_y, ratio);
 
 		return this.vtm;
 	}

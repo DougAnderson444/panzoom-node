@@ -738,7 +738,7 @@ class Root extends SvelteComponent {
 }
 const scriptRel = "modulepreload";
 const seen = {};
-const base = "/svelte-connectables/_app/";
+const base = "/svelte-zoom-action/_app/";
 const __vitePreload = function preload(baseModule, deps) {
   if (!deps || deps.length === 0) {
     return baseModule();
@@ -773,7 +773,7 @@ const matchers = {};
 const components = [
   () => __vitePreload(() => import("./pages/__layout.svelte-1fb10b94.js"), true ? ["pages/__layout.svelte-1fb10b94.js","assets/pages/__layout.svelte-ec595e4a.css","chunks/vendor-dac9318e.js"] : void 0),
   () => __vitePreload(() => import("./error.svelte-b84c7d89.js"), true ? ["error.svelte-b84c7d89.js","chunks/vendor-dac9318e.js"] : void 0),
-  () => __vitePreload(() => import("./pages/index.svelte-11bcebda.js"), true ? ["pages/index.svelte-11bcebda.js","assets/pages/index.svelte-2213b66c.css","chunks/vendor-dac9318e.js"] : void 0),
+  () => __vitePreload(() => import("./pages/index.svelte-976b8c6d.js"), true ? ["pages/index.svelte-976b8c6d.js","assets/pages/index.svelte-2213b66c.css","chunks/vendor-dac9318e.js"] : void 0),
   () => __vitePreload(() => import("./pages/legacy.svelte-e79b05e8.js"), true ? ["pages/legacy.svelte-e79b05e8.js","assets/pages/legacy.svelte-57ded989.css","chunks/vendor-dac9318e.js"] : void 0)
 ];
 const dictionary = {
@@ -891,7 +891,7 @@ function notifiable_store(value) {
 }
 function create_updated_store() {
   const { set, subscribe } = writable(false);
-  const initial = "1647986796431";
+  const initial = "1647987343271";
   let timeout;
   async function check() {
     clearTimeout(timeout);
@@ -1831,4 +1831,4 @@ async function start({ paths, target, session, route, spa, trailing_slash, hydra
   dispatchEvent(new CustomEvent("sveltekit:start"));
 }
 export { start };
-//# sourceMappingURL=start-84c64aeb.js.map
+//# sourceMappingURL=start-cba92f37.js.map
