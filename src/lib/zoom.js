@@ -199,10 +199,15 @@ export const zoom = (container, params = {}) => {
 		let in_y = (container.clientHeight - ratio.height * matrix.vtm.a) / 2;
 
 		// The mouse coordinates.
+		// the translate-origin is the middle of the container, so we need to alk back from (center, center)
+		// plus any position relative/absolute offset it may have
+		console.log({ container });
+
 		const origin = {
-			x: e.clientX,
-			y: e.clientY
+			x: e.clientX - container.clientWidth / 2 - container.offsetLeft,
+			y: e.clientY - container.clientHeight / 2 - container.offsetTop
 		};
+
 		const mat = matrix.scale(
 			xFactor,
 			yFactor,
@@ -214,7 +219,6 @@ export const zoom = (container, params = {}) => {
 			scale.value * xFactor,
 			dir
 		);
-		// console.log({ xFactor, yFactor, origin }, { mat });
 
 		target.style.transform = `translate(${mat.e}px,${mat.f}px) scale(${mat.a})`;
 
