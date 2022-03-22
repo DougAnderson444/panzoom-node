@@ -23,3 +23,7 @@ REPL is [https://svelte.dev/repl/9a9571ea3590430690d3a0c809bb7eb3](https://svelt
 	</div>
 </div>
 ```
+
+## Options
+
+TOOD.
