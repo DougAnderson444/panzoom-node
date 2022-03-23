@@ -43,6 +43,7 @@ export const panzoom = (node, params = {}) => {
 	// ensure touch and select action defaults are disabled
 	container.style['touch-action'] = 'none';
 	container.style['user-select'] = 'none';
+	container.style['overflow'] = 'hidden';
 
 	matrix = new Matrix({ container });
 
@@ -224,11 +225,10 @@ export const panzoom = (node, params = {}) => {
 		// The mouse coordinates.
 		// the translate-origin is the middle of the container, so we need to alk back from (center, center)
 		// plus any position relative/absolute offset it may have
-		console.log({ container });
 
 		const origin = {
-			x: e.clientX - container.clientWidth / 2 - container.offsetLeft,
-			y: e.clientY - container.clientHeight / 2 - container.offsetTop
+			x: e.pageX - container.clientWidth / 2 - container.offsetLeft,
+			y: e.pageY - container.clientHeight / 2 - container.offsetTop
 		};
 
 		const mat = matrix.scale(
