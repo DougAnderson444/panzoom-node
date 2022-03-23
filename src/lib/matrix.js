@@ -68,7 +68,7 @@ export default class Matrix {
 			.translate(this.x - x, this.y - y)
 			.scale(this.vtm.a);
 
-		this.clamp(this.vtm.a, in_x, in_y, ratio);
+		// this.clamp(this.vtm.a, in_x, in_y, ratio);
 		return this.vtm;
 	}
 
