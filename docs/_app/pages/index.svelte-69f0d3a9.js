@@ -112,6 +112,7 @@ const panzoom = (node, params = {}) => {
   let container = node.parentElement || document.body;
   container.style["touch-action"] = "none";
   container.style["user-select"] = "none";
+  container.style["overflow"] = "hidden";
   matrix = new Matrix({ container });
   onLoad();
   container.addEventListener("wheel", onWheel, { passive: false });
@@ -210,10 +211,9 @@ const panzoom = (node, params = {}) => {
     const yFactor = xFactor * container.clientHeight / container.clientWidth;
     let in_x = (container.clientWidth - ratio.width * matrix.vtm.a) / 2;
     let in_y = (container.clientHeight - ratio.height * matrix.vtm.a) / 2;
-    console.log({ container });
     const origin = {
-      x: e.clientX - container.clientWidth / 2 - container.offsetLeft,
-      y: e.clientY - container.clientHeight / 2 - container.offsetTop
+      x: e.pageX - container.clientWidth / 2 - container.offsetLeft,
+      y: e.pageY - container.clientHeight / 2 - container.offsetTop
     };
     const mat = matrix.scale(xFactor, yFactor, origin, in_x, in_y, ratio, scale.max, scale.value * xFactor, dir);
     node.style.transform = `translate(${mat.e}px,${mat.f}px) scale(${mat.a})`;
@@ -573,100 +573,162 @@ function create_each_block(ctx) {
   };
 }
 function create_fragment(ctx) {
-  let div4;
-  let div2;
   let div0;
+  let h1;
   let t0;
-  let t1_value = ctx[3].value + "";
   let t1;
+  let p0;
   let t2;
-  let div1;
   let t3;
+  let h2;
   let t4;
   let t5;
+  let p1;
+  let t6;
+  let t7;
+  let div5;
   let div3;
+  let div1;
+  let t8;
+  let t9_value = ctx[3].value + "";
+  let t9;
+  let t10;
+  let div2;
+  let t11;
+  let t12;
+  let t13;
+  let div4;
   let current;
   let mounted;
   let dispose;
   let if_block = ctx[1] && create_if_block(ctx);
   return {
     c() {
-      div4 = element("div");
-      div2 = element("div");
       div0 = element("div");
-      t0 = text("Zoom Level: ");
-      t1 = text(t1_value);
-      t2 = space();
-      div1 = element("div");
-      t3 = text("Style: ");
-      t4 = text(ctx[2]);
+      h1 = element("h1");
+      t0 = text("Pan and Zoom");
+      t1 = space();
+      p0 = element("p");
+      t2 = text("Try out the mouse wheel scroll in the red box below");
+      t3 = space();
+      h2 = element("h2");
+      t4 = text("Inside");
       t5 = space();
+      p1 = element("p");
+      t6 = text("Inside the red box should pan and zoom");
+      t7 = space();
+      div5 = element("div");
       div3 = element("div");
+      div1 = element("div");
+      t8 = text("Zoom Level: ");
+      t9 = text(t9_value);
+      t10 = space();
+      div2 = element("div");
+      t11 = text("Style: ");
+      t12 = text(ctx[2]);
+      t13 = space();
+      div4 = element("div");
       if (if_block)
         if_block.c();
       this.h();
     },
     l(nodes) {
-      div4 = claim_element(nodes, "DIV", { class: true });
-      var div4_nodes = children(div4);
-      div2 = claim_element(div4_nodes, "DIV", { class: true });
-      var div2_nodes = children(div2);
-      div0 = claim_element(div2_nodes, "DIV", {});
+      div0 = claim_element(nodes, "DIV", {});
       var div0_nodes = children(div0);
-      t0 = claim_text(div0_nodes, "Zoom Level: ");
-      t1 = claim_text(div0_nodes, t1_value);
+      h1 = claim_element(div0_nodes, "H1", {});
+      var h1_nodes = children(h1);
+      t0 = claim_text(h1_nodes, "Pan and Zoom");
+      h1_nodes.forEach(detach);
+      t1 = claim_space(div0_nodes);
+      p0 = claim_element(div0_nodes, "P", {});
+      var p0_nodes = children(p0);
+      t2 = claim_text(p0_nodes, "Try out the mouse wheel scroll in the red box below");
+      p0_nodes.forEach(detach);
+      t3 = claim_space(div0_nodes);
+      h2 = claim_element(div0_nodes, "H2", {});
+      var h2_nodes = children(h2);
+      t4 = claim_text(h2_nodes, "Inside");
+      h2_nodes.forEach(detach);
+      t5 = claim_space(div0_nodes);
+      p1 = claim_element(div0_nodes, "P", {});
+      var p1_nodes = children(p1);
+      t6 = claim_text(p1_nodes, "Inside the red box should pan and zoom");
+      p1_nodes.forEach(detach);
       div0_nodes.forEach(detach);
-      t2 = claim_space(div2_nodes);
-      div1 = claim_element(div2_nodes, "DIV", {});
-      var div1_nodes = children(div1);
-      t3 = claim_text(div1_nodes, "Style: ");
-      t4 = claim_text(div1_nodes, ctx[2]);
-      div1_nodes.forEach(detach);
-      div2_nodes.forEach(detach);
-      t5 = claim_space(div4_nodes);
-      div3 = claim_element(div4_nodes, "DIV", { class: true });
+      t7 = claim_space(nodes);
+      div5 = claim_element(nodes, "DIV", { class: true });
+      var div5_nodes = children(div5);
+      div3 = claim_element(div5_nodes, "DIV", { class: true });
       var div3_nodes = children(div3);
-      if (if_block)
-        if_block.l(div3_nodes);
+      div1 = claim_element(div3_nodes, "DIV", {});
+      var div1_nodes = children(div1);
+      t8 = claim_text(div1_nodes, "Zoom Level: ");
+      t9 = claim_text(div1_nodes, t9_value);
+      div1_nodes.forEach(detach);
+      t10 = claim_space(div3_nodes);
+      div2 = claim_element(div3_nodes, "DIV", {});
+      var div2_nodes = children(div2);
+      t11 = claim_text(div2_nodes, "Style: ");
+      t12 = claim_text(div2_nodes, ctx[2]);
+      div2_nodes.forEach(detach);
       div3_nodes.forEach(detach);
+      t13 = claim_space(div5_nodes);
+      div4 = claim_element(div5_nodes, "DIV", { class: true });
+      var div4_nodes = children(div4);
+      if (if_block)
+        if_block.l(div4_nodes);
       div4_nodes.forEach(detach);
+      div5_nodes.forEach(detach);
       this.h();
     },
     h() {
-      attr(div2, "class", "menu svelte-1hqdfkj");
-      attr(div3, "class", "zoomable flexbox svelte-1hqdfkj");
-      attr(div4, "class", "container svelte-1hqdfkj");
+      attr(div3, "class", "menu svelte-1j7lp5w");
+      attr(div4, "class", "zoomable flexbox svelte-1j7lp5w");
+      attr(div5, "class", "container svelte-1j7lp5w");
     },
     m(target, anchor) {
-      insert_hydration(target, div4, anchor);
-      append_hydration(div4, div2);
-      append_hydration(div2, div0);
-      append_hydration(div0, t0);
+      insert_hydration(target, div0, anchor);
+      append_hydration(div0, h1);
+      append_hydration(h1, t0);
       append_hydration(div0, t1);
-      append_hydration(div2, t2);
-      append_hydration(div2, div1);
-      append_hydration(div1, t3);
-      append_hydration(div1, t4);
-      append_hydration(div4, t5);
-      append_hydration(div4, div3);
+      append_hydration(div0, p0);
+      append_hydration(p0, t2);
+      append_hydration(div0, t3);
+      append_hydration(div0, h2);
+      append_hydration(h2, t4);
+      append_hydration(div0, t5);
+      append_hydration(div0, p1);
+      append_hydration(p1, t6);
+      insert_hydration(target, t7, anchor);
+      insert_hydration(target, div5, anchor);
+      append_hydration(div5, div3);
+      append_hydration(div3, div1);
+      append_hydration(div1, t8);
+      append_hydration(div1, t9);
+      append_hydration(div3, t10);
+      append_hydration(div3, div2);
+      append_hydration(div2, t11);
+      append_hydration(div2, t12);
+      append_hydration(div5, t13);
+      append_hydration(div5, div4);
       if (if_block)
-        if_block.m(div3, null);
-      ctx[7](div3);
-      ctx[8](div4);
+        if_block.m(div4, null);
+      ctx[7](div4);
+      ctx[8](div5);
       current = true;
       if (!mounted) {
         dispose = [
-          action_destroyer(panzoom.call(null, div3)),
-          listen(div3, "zoomed", ctx[5])
+          action_destroyer(panzoom.call(null, div4)),
+          listen(div4, "zoomed", ctx[5])
         ];
         mounted = true;
       }
     },
     p(ctx2, [dirty]) {
-      if ((!current || dirty & 8) && t1_value !== (t1_value = ctx2[3].value + ""))
-        set_data(t1, t1_value);
+      if ((!current || dirty & 8) && t9_value !== (t9_value = ctx2[3].value + ""))
+        set_data(t9, t9_value);
       if (!current || dirty & 4)
-        set_data(t4, ctx2[2]);
+        set_data(t12, ctx2[2]);
       if (ctx2[1]) {
         if (if_block) {
           if_block.p(ctx2, dirty);
@@ -677,7 +739,7 @@ function create_fragment(ctx) {
           if_block = create_if_block(ctx2);
           if_block.c();
           transition_in(if_block, 1);
-          if_block.m(div3, null);
+          if_block.m(div4, null);
         }
       } else if (if_block) {
         group_outros();
@@ -699,7 +761,11 @@ function create_fragment(ctx) {
     },
     d(detaching) {
       if (detaching)
-        detach(div4);
+        detach(div0);
+      if (detaching)
+        detach(t7);
+      if (detaching)
+        detach(div5);
       if (if_block)
         if_block.d();
       ctx[7](null);
@@ -721,13 +787,13 @@ function instance($$self, $$props, $$invalidate) {
     $$invalidate(2, style = zoomable.style.transform);
   }
   const grid = Array.from({ length: count }, (_, i) => Array.from({ length: count }, (_2, j) => ({ id: i * count + j })));
-  function div3_binding($$value) {
+  function div4_binding($$value) {
     binding_callbacks[$$value ? "unshift" : "push"](() => {
       zoomable = $$value;
       $$invalidate(0, zoomable);
     });
   }
-  function div4_binding($$value) {
+  function div5_binding($$value) {
     binding_callbacks[$$value ? "unshift" : "push"](() => {
       container = $$value;
       $$invalidate(1, container);
@@ -741,8 +807,8 @@ function instance($$self, $$props, $$invalidate) {
     min,
     handleZoom,
     grid,
-    div3_binding,
-    div4_binding
+    div4_binding,
+    div5_binding
   ];
 }
 class Routes extends SvelteComponent {
@@ -752,4 +818,4 @@ class Routes extends SvelteComponent {
   }
 }
 export { Routes as default };
-//# sourceMappingURL=index.svelte-53bc5aea.js.map
+//# sourceMappingURL=index.svelte-69f0d3a9.js.map
