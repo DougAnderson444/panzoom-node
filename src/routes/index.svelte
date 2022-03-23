@@ -19,6 +19,14 @@
 	);
 </script>
 
+<div>
+	<h1>Pan and Zoom</h1>
+	<p>Try out the mouse wheel scroll in the red box below</p>
+
+	<h2>Inside</h2>
+	<p>Inside the red box should pan and zoom</p>
+</div>
+
 <div class="container" bind:this={container}>
 	<div class="menu">
 		<div>
@@ -50,7 +58,7 @@
 		border: 3px solid red;
 		height: 600px;
 		width: 600px;
-		overflow: hidden;
+		/* overflow: hidden;  move to directive */
 		/* touch-action: none;  its set by the directive :) */
 		position: relative;
 		top: 20px;
