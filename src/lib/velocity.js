@@ -13,10 +13,12 @@ export default class MultiTouchVelocity {
 			velocity: 1
 		};
 	}
+
 	down(touchA, touchB) {
 		this.touchA = { clientX: touchA.clientX, clientY: touchA.clientY, t: Date.now(), velocity: 0 };
 		this.touchB = { clientX: touchB.clientX, clientY: touchB.clientY, t: Date.now(), veloctiy: 0 };
 	}
+
 	calc(touch, ins) {
 		var new_x = touch.clientX,
 			new_y = touch.clientY,
@@ -32,6 +34,7 @@ export default class MultiTouchVelocity {
 		ins.clientY = new_y;
 		ins.t = new_t;
 	}
+
 	getVelocity(touchA, touchB) {
 		this.calc(touchA, this.touchA);
 		this.calc(touchB, this.touchB);
