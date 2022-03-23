@@ -1,6 +1,5 @@
 <script>
 	import { panzoom } from '$lib/panzoom.js';
-	import { zoom } from '$lib/zoom.js';
 	import Spot from '$lib/_components/Spot.svelte';
 
 	let zoomable, container;
@@ -28,7 +27,7 @@
 
 		<div>Style: {style}</div>
 	</div>
-	<div class="zoomable flexbox" bind:this={zoomable} use:zoom on:zoomed={handleZoom}>
+	<div class="zoomable flexbox" bind:this={zoomable} use:panzoom on:zoomed={handleZoom}>
 		{#if container}
 			<div class="grid">
 				{#each grid as col, x}
