@@ -1,64 +1,51 @@
 {
   ".svelte-kit/runtime/client/start.js": {
-    "file": "start-e57b249c.js",
+    "file": "start-62561ad0.js",
     "src": ".svelte-kit/runtime/client/start.js",
     "isEntry": true,
     "imports": [
-      "_vendor-dac9318e.js"
+      "_vendor-15451ce5.js"
     ],
     "dynamicImports": [
       "src/routes/__layout.svelte",
       ".svelte-kit/runtime/components/error.svelte",
-      "src/routes/index.svelte",
-      "src/routes/legacy.svelte"
+      "src/routes/index.svelte"
     ]
   },
   "src/routes/__layout.svelte": {
-    "file": "pages/__layout.svelte-1fb10b94.js",
+    "file": "pages/__layout.svelte-8f367230.js",
     "src": "src/routes/__layout.svelte",
     "isEntry": true,
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-dac9318e.js"
+      "_vendor-15451ce5.js"
     ],
     "css": [
       "assets/pages/__layout.svelte-ec595e4a.css"
     ]
   },
   ".svelte-kit/runtime/components/error.svelte": {
-    "file": "error.svelte-b84c7d89.js",
+    "file": "error.svelte-f068c2ac.js",
     "src": ".svelte-kit/runtime/components/error.svelte",
     "isEntry": true,
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-dac9318e.js"
+      "_vendor-15451ce5.js"
     ]
   },
   "src/routes/index.svelte": {
-    "file": "pages/index.svelte-415db3c9.js",
+    "file": "pages/index.svelte-53bc5aea.js",
     "src": "src/routes/index.svelte",
     "isEntry": true,
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-dac9318e.js"
+      "_vendor-15451ce5.js"
     ],
     "css": [
       "assets/pages/index.svelte-55eaffd5.css"
     ]
   },
-  "src/routes/legacy.svelte": {
-    "file": "pages/legacy.svelte-e79b05e8.js",
-    "src": "src/routes/legacy.svelte",
-    "isEntry": true,
-    "isDynamicEntry": true,
-    "imports": [
-      "_vendor-dac9318e.js"
-    ],
-    "css": [
-      "assets/pages/legacy.svelte-57ded989.css"
-    ]
-  },
-  "_vendor-dac9318e.js": {
-    "file": "chunks/vendor-dac9318e.js"
+  "_vendor-15451ce5.js": {
+    "file": "chunks/vendor-15451ce5.js"
   }
 }

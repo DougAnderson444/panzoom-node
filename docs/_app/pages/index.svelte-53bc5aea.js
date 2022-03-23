@@ -1,4 +1,4 @@
-import { SvelteComponent, init, safe_not_equal, element, claim_element, children, detach, set_style, attr, insert_hydration, noop, transition_in, space, claim_space, append_hydration, create_component, claim_component, mount_component, transition_out, destroy_component, check_outros, destroy_each, text, claim_text, action_destroyer, listen, set_data, run_all, group_outros, binding_callbacks } from "../chunks/vendor-dac9318e.js";
+import { SvelteComponent, init, safe_not_equal, element, claim_element, children, detach, set_style, attr, insert_hydration, noop, transition_in, space, claim_space, append_hydration, create_component, claim_component, mount_component, transition_out, destroy_component, check_outros, destroy_each, text, claim_text, action_destroyer, listen, set_data, run_all, group_outros, binding_callbacks } from "../chunks/vendor-15451ce5.js";
 class Matrix {
   constructor({ container }) {
     this.container = container;
@@ -108,7 +108,7 @@ let scale = {
   value: 1,
   max: 20
 };
-const zoom = (node, params = {}) => {
+const panzoom = (node, params = {}) => {
   let container = node.parentElement || document.body;
   container.style["touch-action"] = "none";
   container.style["user-select"] = "none";
@@ -656,7 +656,7 @@ function create_fragment(ctx) {
       current = true;
       if (!mounted) {
         dispose = [
-          action_destroyer(zoom.call(null, div3)),
+          action_destroyer(panzoom.call(null, div3)),
           listen(div3, "zoomed", ctx[5])
         ];
         mounted = true;
@@ -752,4 +752,4 @@ class Routes extends SvelteComponent {
   }
 }
 export { Routes as default };
-//# sourceMappingURL=index.svelte-415db3c9.js.map
+//# sourceMappingURL=index.svelte-53bc5aea.js.map

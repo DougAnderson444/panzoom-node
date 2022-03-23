@@ -67,13 +67,6 @@ function get_all_dirty_from_scope($$scope) {
   }
   return -1;
 }
-function exclude_internal_props(props) {
-  const result = {};
-  for (const k in props)
-    if (k[0] !== "$")
-      result[k] = props[k];
-  return result;
-}
 function action_destroyer(action_result) {
   return action_result && is_function(action_result.destroy) ? action_result.destroy : noop;
 }
@@ -203,22 +196,6 @@ function attr(node, attribute, value) {
   else if (node.getAttribute(attribute) !== value)
     node.setAttribute(attribute, value);
 }
-function set_attributes(node, attributes) {
-  const descriptors = Object.getOwnPropertyDescriptors(node.__proto__);
-  for (const key in attributes) {
-    if (attributes[key] == null) {
-      node.removeAttribute(key);
-    } else if (key === "style") {
-      node.style.cssText = attributes[key];
-    } else if (key === "__value") {
-      node.value = node[key] = attributes[key];
-    } else if (descriptors[key] && descriptors[key].set) {
-      node[key] = attributes[key];
-    } else {
-      attr(node, key, attributes[key]);
-    }
-  }
-}
 function children(element2) {
   return Array.from(element2.childNodes);
 }
@@ -310,9 +287,6 @@ function set_style(node, key, value, important) {
   } else {
     node.style.setProperty(key, value, important ? "important" : "");
   }
-}
-function toggle_class(element2, name, toggle) {
-  element2.classList[toggle ? "add" : "remove"](name);
 }
 let current_component;
 function set_current_component(component) {
@@ -622,5 +596,5 @@ function writable(value, start = noop) {
   }
   return { set, update: update2, subscribe };
 }
-export { SvelteComponent, action_destroyer, afterUpdate, append_hydration, assign, attr, binding_callbacks, check_outros, children, claim_component, claim_element, claim_space, claim_text, create_component, create_slot, destroy_component, destroy_each, detach, element, empty, exclude_internal_props, get_all_dirty_from_scope, get_slot_changes, get_spread_object, get_spread_update, group_outros, init, insert_hydration, listen, mount_component, noop, onMount, run_all, safe_not_equal, setContext, set_attributes, set_data, set_style, space, text, tick, toggle_class, transition_in, transition_out, update_slot_base, writable };
-//# sourceMappingURL=vendor-dac9318e.js.map
+export { SvelteComponent, action_destroyer, afterUpdate, append_hydration, assign, attr, binding_callbacks, check_outros, children, claim_component, claim_element, claim_space, claim_text, create_component, create_slot, destroy_component, destroy_each, detach, element, empty, get_all_dirty_from_scope, get_slot_changes, get_spread_object, get_spread_update, group_outros, init, insert_hydration, listen, mount_component, noop, onMount, run_all, safe_not_equal, setContext, set_data, set_style, space, text, tick, transition_in, transition_out, update_slot_base, writable };
+//# sourceMappingURL=vendor-15451ce5.js.map
