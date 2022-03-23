@@ -19,7 +19,16 @@ const config = {
 		},
 		paths: {
 			// change below to your repo name
-			base: process.env.NODE_ENV === 'production' ? '/svelte-zoom-action' : ''
+			base: process.env.NODE_ENV === 'production' ? '/panzoom-node' : ''
+		},
+		package: {
+			exports: (filepath) => {
+				console.log({ filepath });
+				if (filepath === 'index.js') {
+					return true;
+				}
+				return false;
+			}
 		},
 		vite: () => ({
 			build: {

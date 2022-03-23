@@ -738,7 +738,7 @@ class Root extends SvelteComponent {
 }
 const scriptRel = "modulepreload";
 const seen = {};
-const base = "/svelte-zoom-action/_app/";
+const base = "/panzoom-node/_app/";
 const __vitePreload = function preload(baseModule, deps) {
   if (!deps || deps.length === 0) {
     return baseModule();
@@ -889,7 +889,7 @@ function notifiable_store(value) {
 }
 function create_updated_store() {
   const { set, subscribe } = writable(false);
-  const initial = "1648054676144";
+  const initial = "1648055197875";
   let timeout;
   async function check() {
     clearTimeout(timeout);
@@ -1829,4 +1829,4 @@ async function start({ paths, target, session, route, spa, trailing_slash, hydra
   dispatchEvent(new CustomEvent("sveltekit:start"));
 }
 export { start };
-//# sourceMappingURL=start-62561ad0.js.map
+//# sourceMappingURL=start-b7bf7c2f.js.map
