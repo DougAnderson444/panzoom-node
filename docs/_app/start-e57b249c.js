@@ -773,7 +773,7 @@ const matchers = {};
 const components = [
   () => __vitePreload(() => import("./pages/__layout.svelte-1fb10b94.js"), true ? ["pages/__layout.svelte-1fb10b94.js","assets/pages/__layout.svelte-ec595e4a.css","chunks/vendor-dac9318e.js"] : void 0),
   () => __vitePreload(() => import("./error.svelte-b84c7d89.js"), true ? ["error.svelte-b84c7d89.js","chunks/vendor-dac9318e.js"] : void 0),
-  () => __vitePreload(() => import("./pages/index.svelte-e9ec2db5.js"), true ? ["pages/index.svelte-e9ec2db5.js","assets/pages/index.svelte-ca5e417d.css","chunks/vendor-dac9318e.js"] : void 0),
+  () => __vitePreload(() => import("./pages/index.svelte-415db3c9.js"), true ? ["pages/index.svelte-415db3c9.js","assets/pages/index.svelte-55eaffd5.css","chunks/vendor-dac9318e.js"] : void 0),
   () => __vitePreload(() => import("./pages/legacy.svelte-e79b05e8.js"), true ? ["pages/legacy.svelte-e79b05e8.js","assets/pages/legacy.svelte-57ded989.css","chunks/vendor-dac9318e.js"] : void 0)
 ];
 const dictionary = {
@@ -891,7 +891,7 @@ function notifiable_store(value) {
 }
 function create_updated_store() {
   const { set, subscribe } = writable(false);
-  const initial = "1647988414563";
+  const initial = "1648049089125";
   let timeout;
   async function check() {
     clearTimeout(timeout);
@@ -1831,4 +1831,4 @@ async function start({ paths, target, session, route, spa, trailing_slash, hydra
   dispatchEvent(new CustomEvent("sveltekit:start"));
 }
 export { start };
-//# sourceMappingURL=start-29f637a0.js.map
+//# sourceMappingURL=start-e57b249c.js.map
