@@ -27,6 +27,7 @@
 	);
 </script>
 
+<div style="position: absolute; left: 10px; ">Zoom Level:</div>
 <div
 	class="container"
 	use:zoom
@@ -34,8 +35,7 @@
 	on:mousemove={handleMouseMove}
 	bind:this={container}
 >
-	<div class="zoomable flexbox" bind:this={zoomable} style="">
-		<div style="position: absolute; left: 10px; " />
+	<div class="zoomable flexbox" bind:this={zoomable}>
 		<div>
 			Scroll in me. <br />
 			{location?.x}, {location?.y}<br />
@@ -100,7 +100,7 @@
 		height: 600px;
 		width: 600px;
 		overflow: hidden;
-		touch-action: none;
+		/* touch-action: none;  its set by the directive :) */
 		position: relative;
 		top: 20px;
 		left: 100px;
