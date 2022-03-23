@@ -247,7 +247,7 @@ export const zoom = (node, params = {}) => {
 
 		scale.value = mat.d;
 
-		container.dispatchEvent(
+		node.dispatchEvent(
 			new CustomEvent('zoomed', {
 				detail: { style: node.style, scale, matrix, origin }
 			})
