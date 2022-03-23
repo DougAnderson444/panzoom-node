@@ -10,9 +10,8 @@ let xY = {
 	newX: 0,
 	newY: 0
 };
-let ratio, target;
+let ratio;
 let matrix;
-let contain = null;
 let willChange = true;
 let velocity = new MultiTouchVelocity();
 let lastTap = {
@@ -38,12 +37,12 @@ export const zoomOut = () => fireManualZoom(-1);
 
 // Svelte action directive
 // see https://svelte.dev/docs#template-syntax-element-directives-use-action
-export const zoom = (container, params = {}) => {
-	// ensure touch action defaults are disabled
+export const zoom = (node, params = {}) => {
+	let container = node.parentElement || document.body;
+
+	// ensure touch and select action defaults are disabled
 	container.style['touch-action'] = 'none';
 	container.style['user-select'] = 'none';
-
-	let target = container.firstElementChild;
 
 	matrix = new Matrix({ container });
 
@@ -66,8 +65,7 @@ export const zoom = (container, params = {}) => {
 	}
 
 	function onLoad() {
-		const { offsetWidth, offsetHeight } = target;
-		contain = offsetWidth > container.clientWidth || offsetHeight > container.clientHeight;
+		const { offsetWidth, offsetHeight } = node;
 
 		ratio = calculateAspectRatioFit(
 			offsetWidth,
@@ -101,7 +99,7 @@ export const zoom = (container, params = {}) => {
 		xY.newY = xY.initY - y;
 		const mat = matrix.move(xY.newX, xY.newY, in_x, in_y, ratio); // rm clamp
 		console.log('Move');
-		target.style.transform = `matrix(${mat.a},${mat.b},${mat.c},${mat.d},${mat.e}, ${mat.f})`;
+		node.style.transform = `matrix(${mat.a},${mat.b},${mat.c},${mat.d},${mat.e}, ${mat.f})`;
 	}
 
 	function fireUp() {
@@ -152,7 +150,7 @@ export const zoom = (container, params = {}) => {
 			scale_factor
 		);
 		scale.value = mat.d;
-		target.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
+		node.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
 	}
 
 	function fireScaleMove(touchA, touchB, e) {
@@ -182,7 +180,7 @@ export const zoom = (container, params = {}) => {
 			f
 		);
 
-		target.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
+		node.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
 		scale.value = mat.d;
 		scale.lastHypo = hypo;
 		scale.scaling = true;
@@ -209,7 +207,7 @@ export const zoom = (container, params = {}) => {
 			scale.value * xFactor,
 			dir
 		);
-		target.style.transform = `translate(${mat.e}px,${mat.f}px) scale(${mat.a})`;
+		node.style.transform = `translate(${mat.e}px,${mat.f}px) scale(${mat.a})`;
 		scale.value = mat.d;
 	}
 
@@ -245,13 +243,13 @@ export const zoom = (container, params = {}) => {
 			dir
 		);
 
-		target.style.transform = `translate(${mat.e}px,${mat.f}px) scale(${mat.a})`;
+		node.style.transform = `translate(${mat.e}px,${mat.f}px) scale(${mat.a})`;
 
 		scale.value = mat.d;
 
 		container.dispatchEvent(
 			new CustomEvent('zoomed', {
-				detail: { style: target.style, scale, matrix, origin }
+				detail: { style: node.style, scale, matrix, origin }
 			})
 		);
 	}

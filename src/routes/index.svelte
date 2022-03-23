@@ -27,15 +27,9 @@
 	);
 </script>
 
-<div style="position: absolute; left: 10px; ">Zoom Level:</div>
-<div
-	class="container"
-	use:zoom
-	on:zoomed={handleZoom}
-	on:mousemove={handleMouseMove}
-	bind:this={container}
->
-	<div class="zoomable flexbox" bind:this={zoomable}>
+<div class="container" on:zoomed={handleZoom} on:mousemove={handleMouseMove} bind:this={container}>
+	<div style="position: absolute; left: 10px; z-index: 10;">Zoom Level: {scale.value}</div>
+	<div class="zoomable flexbox" bind:this={zoomable} use:zoom>
 		<div>
 			Scroll in me. <br />
 			{location?.x}, {location?.y}<br />
