@@ -39,6 +39,10 @@ export const zoomOut = () => fireManualZoom(-1);
 // Svelte action directive
 // see https://svelte.dev/docs#template-syntax-element-directives-use-action
 export const zoom = (container, params = {}) => {
+	// ensure touch action defaults are disabled
+	container.style['touch-action'] = 'none';
+	container.style['user-select'] = 'none';
+
 	let target = container.firstElementChild;
 
 	matrix = new Matrix({ container });
@@ -49,9 +53,17 @@ export const zoom = (container, params = {}) => {
 	container.addEventListener('wheel', onWheel, { passive: false });
 	container.addEventListener('mousedown', onMouseDown, { passive: false });
 	container.addEventListener('touchstart', onTouchStart, { passive: false });
+	container.addEventListener('dragstart', onDragStart, { passive: false });
+	container.addEventListener('drag', onDragStart, { passive: false });
 
 	// window listeners
 	window.addEventListener('resize', onResize);
+
+	function onDragStart(e) {
+		console.log('Removing drag listener');
+		//cancel the natural drag listener
+		return false;
+	}
 
 	function onLoad() {
 		const { offsetWidth, offsetHeight } = target;
@@ -80,15 +92,18 @@ export const zoom = (container, params = {}) => {
 
 		willChange = true;
 	}
+
 	function fireMove(x, y) {
 		if (scale.scaling) return;
 		let in_x = (container.clientWidth - ratio.width * matrix.vtm.a) / 2;
 		let in_y = (container.clientHeight - ratio.height * matrix.vtm.a) / 2;
 		xY.newX = xY.initX - x;
 		xY.newY = xY.initY - y;
-		const mat = matrix.move(in_x >= 0 ? 0 : xY.newX, in_y >= 0 ? 0 : xY.newY, in_x, in_y, ratio);
+		const mat = matrix.move(xY.newX, xY.newY, in_x, in_y, ratio); // rm clamp
+		console.log('Move');
 		target.style.transform = `matrix(${mat.a},${mat.b},${mat.c},${mat.d},${mat.e}, ${mat.f})`;
 	}
+
 	function fireUp() {
 		matrix.x -= xY.newX;
 		matrix.y -= xY.newY;
@@ -97,6 +112,7 @@ export const zoom = (container, params = {}) => {
 		smooth = true;
 		willChange = false;
 	}
+
 	function fireScale(touchA, touchB) {
 		const xTouch = [Math.min(touchA.pageX, touchB.pageX), Math.max(touchA.pageX, touchB.pageX)];
 		const yTouch = [Math.min(touchA.pageY, touchB.pageY), Math.max(touchA.pageY, touchB.pageY)];
@@ -109,6 +125,7 @@ export const zoom = (container, params = {}) => {
 		scale.lastHypo = Math.trunc(getDistance(touchA, touchB));
 		smooth = false;
 	}
+
 	function fireTapScale(x, y) {
 		let scaleVtm = matrix.vtm.a;
 		let scale_value = scaleVtm > 1 ? scaleVtm - 1 : scale.max / 2.5;
@@ -137,6 +154,7 @@ export const zoom = (container, params = {}) => {
 		scale.value = mat.d;
 		target.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
 	}
+
 	function fireScaleMove(touchA, touchB, e) {
 		const hypo = getDistance(touchA, touchB);
 		let f = hypo / scale.lastHypo;
@@ -163,11 +181,13 @@ export const zoom = (container, params = {}) => {
 			scale.value * xFactor,
 			f
 		);
+
 		target.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
 		scale.value = mat.d;
 		scale.lastHypo = hypo;
 		scale.scaling = true;
 	}
+
 	function fireManualZoom(dir) {
 		const xFactor = 1 + 0.2 * dir;
 		const yFactor = (xFactor * container.clientHeight) / container.clientWidth;
@@ -266,6 +286,7 @@ export const zoom = (container, params = {}) => {
 		container.addEventListener('touchmove', onTouchMove);
 		container.addEventListener('touchend', onTouchEnd);
 	}
+
 	function onTouchMove(e) {
 		if (scale.scaling) {
 			const [touchA, touchB] = e.touches;
@@ -274,6 +295,7 @@ export const zoom = (container, params = {}) => {
 			fireMove(e.touches[0].pageX, e.touches[0].pageY);
 		}
 	}
+
 	function onTouchEnd(e) {
 		fireUp();
 		container.removeEventListener('touchmove', onTouchMove);
@@ -304,6 +326,8 @@ export const zoom = (container, params = {}) => {
 			container.removeEventListener('wheel', onWheel);
 			container.removeEventListener('mousedown', onMouseDown);
 			container.removeEventListener('touchstart', onTouchStart);
+			container.removeEventListener('dragstart', onDragStart);
+			container.addEventListener('drag', onDragStart);
 
 			// window listeners
 			window.removeEventListener('resize', onResize);
