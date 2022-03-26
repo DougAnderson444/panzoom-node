@@ -58,18 +58,17 @@
 		border: 3px solid red;
 		height: 600px;
 		width: 600px;
-		/* overflow: hidden;  move to directive */
+		margin: 3em;
+		/* overflow: hidden;  its set by the directive :) */
 		/* touch-action: none;  its set by the directive :) */
-		position: relative;
-		top: 20px;
-		left: 100px;
+		/* position: relative; its set by the directive :) */
 	}
 	.zoomable {
 		border: 4px dashed blue;
 		height: 100%;
 		width: 100%;
 		/* margin: 1em; */
-		position: relative;
+		/* position: relative; its set by the directive :) */
 	}
 	.flexbox {
 		display: flex;
