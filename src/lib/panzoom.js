@@ -40,19 +40,28 @@ export const zoomOut = () => fireManualZoom(-1);
 export const panzoom = (node, params = {}) => {
 	let container = node.parentElement || document.body;
 
-	// ensure touch and select action defaults are disabled
+	// ensure touch and select action defaults are disable
 	container.style['touch-action'] = 'none';
 	container.style['user-select'] = 'none';
 	container.style['overflow'] = 'hidden';
+	container.style['position'] = 'relative';
+
+	node.style['touch-action'] = 'none';
+	node.style['user-select'] = 'none';
+	node.style['position'] = 'absolute';
+	node.style['height'] = '100%';
+	node.style['width'] = '100%';
 
 	matrix = new Matrix({ container });
 
 	onLoad();
 
 	// container listeners
-	container.addEventListener('wheel', onWheel, { passive: false });
-	container.addEventListener('mousedown', onMouseDown, { passive: false });
-	container.addEventListener('touchstart', onTouchStart, { passive: false });
+	node.addEventListener('wheel', onWheel, { passive: false });
+	node.addEventListener('mousedown', onMouseDown, { passive: false });
+	node.addEventListener('touchstart', onTouchStart, { passive: false });
+	node.addEventListener('dragstart', onDragStart, { passive: false });
+	node.addEventListener('drag', onDragStart, { passive: false });
 	container.addEventListener('dragstart', onDragStart, { passive: false });
 	container.addEventListener('drag', onDragStart, { passive: false });
 
@@ -279,10 +288,10 @@ export const panzoom = (node, params = {}) => {
 				y: pageY
 			};
 		}
-		container.removeEventListener('touchmove', onTouchMove);
-		container.removeEventListener('touchend', onTouchEnd);
-		container.addEventListener('touchmove', onTouchMove);
-		container.addEventListener('touchend', onTouchEnd);
+		node.removeEventListener('touchmove', onTouchMove);
+		node.removeEventListener('touchend', onTouchEnd);
+		node.addEventListener('touchmove', onTouchMove);
+		node.addEventListener('touchend', onTouchEnd);
 	}
 
 	function onTouchMove(e) {
@@ -296,17 +305,17 @@ export const panzoom = (node, params = {}) => {
 
 	function onTouchEnd(e) {
 		fireUp();
-		container.removeEventListener('touchmove', onTouchMove);
-		container.removeEventListener('touchend', onTouchEnd);
-		container.removeEventListener('touchcancel', onTouchEnd);
+		node.removeEventListener('touchmove', onTouchMove);
+		node.removeEventListener('touchend', onTouchEnd);
+		node.removeEventListener('touchcancel', onTouchEnd);
 	}
 
 	function onMouseDown({ clientX, clientY }) {
 		if (touchScreen) return;
 		fireDown(clientX, clientY);
 		smooth = false;
-		container.addEventListener('mousemove', onMouseMove);
-		container.addEventListener('mouseup', onMouseUp);
+		node.addEventListener('mousemove', onMouseMove);
+		node.addEventListener('mouseup', onMouseUp);
 	}
 
 	function onMouseMove({ clientX, clientY }) {
@@ -314,18 +323,18 @@ export const panzoom = (node, params = {}) => {
 	}
 
 	function onMouseUp() {
-		container.removeEventListener('mousemove', onMouseMove);
+		node.removeEventListener('mousemove', onMouseMove);
 		fireUp();
 	}
 
 	return {
 		destroy() {
 			// container listeners
-			container.removeEventListener('wheel', onWheel);
-			container.removeEventListener('mousedown', onMouseDown);
-			container.removeEventListener('touchstart', onTouchStart);
-			container.removeEventListener('dragstart', onDragStart);
-			container.addEventListener('drag', onDragStart);
+			node.removeEventListener('wheel', onWheel);
+			node.removeEventListener('mousedown', onMouseDown);
+			node.removeEventListener('touchstart', onTouchStart);
+			node.removeEventListener('dragstart', onDragStart);
+			node.addEventListener('drag', onDragStart);
 
 			// window listeners
 			window.removeEventListener('resize', onResize);
