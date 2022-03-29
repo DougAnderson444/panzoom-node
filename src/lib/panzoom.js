@@ -19,18 +19,6 @@ let lastTap = {
 	x: 0,
 	y: 0
 };
-let scale = {
-	scaling: false,
-	x1: 0,
-	x2: 0,
-	y1: 0,
-	y2: 0,
-	lastHypo: 0,
-	originX: 0,
-	originY: 0,
-	value: 1,
-	max: 20
-};
 
 export const zoomIn = () => fireManualZoom(1);
 export const zoomOut = () => fireManualZoom(-1);
@@ -38,6 +26,19 @@ export const zoomOut = () => fireManualZoom(-1);
 // Svelte action directive
 // see https://svelte.dev/docs#template-syntax-element-directives-use-action
 export const panzoom = (node, params = {}) => {
+	let scale = {
+		scaling: false,
+		x1: 0,
+		x2: 0,
+		y1: 0,
+		y2: 0,
+		lastHypo: 0,
+		originX: 0,
+		originY: 0,
+		value: params?.scale?.value || 1,
+		max: 20
+	};
+
 	let container = node.parentElement || document.body;
 
 	// ensure touch and select action defaults are disable
@@ -67,6 +68,31 @@ export const panzoom = (node, params = {}) => {
 
 	// window listeners
 	window.addEventListener('resize', onResize);
+
+	/**
+	 * Also set up a mutation observer so that the node.style.transform can be adjusted outside this
+	 * directive, and the directive will update accordingly
+	 */
+	// Create an observer instance linked to the callback function
+	const observer = new MutationObserver((mutationsList, observer) => {
+		// Use traditional 'for loops' for IE 11
+
+		for (const mutation of mutationsList) {
+			if (mutation.type === 'attributes') {
+				let m;
+				const re = /(\w+)\(([^)]*)\)/g;
+				while ((m = re.exec(node.style['transform']))) {
+					if (m[1] == 'scale' && parseFloat(m[2]).toFixed(2) != scale.value.toFixed(2)) {
+						console.log({ m }, parseFloat(m[2]).toFixed(2), scale.value.toFixed(2));
+						scale.value = m[2];
+					}
+				}
+			}
+		}
+	});
+
+	// Start observing the target node for configured mutations
+	observer.observe(node, { attributes: true, childList: false, subtree: false });
 
 	function onDragStart(e) {
 		console.log('Removing drag listener');
@@ -139,7 +165,7 @@ export const panzoom = (node, params = {}) => {
 		let scale_value = scaleVtm > 1 ? scaleVtm - 1 : scale.max / 2.5;
 		let scale_factor = scaleVtm > 1 ? -1 : 1;
 		const xFactor = 1 + scale_value * scale_factor;
-		const yFactor = (xFactor * container.clientHeight) / container.clientWidth;
+		const yFactor = xFactor; // (xFactor * container.clientHeight) / container.clientWidth;
 		let in_x = (container.clientWidth - ratio.width * Math.max(xFactor * scaleVtm, 1)) / 2;
 		let in_y = (container.clientHeight - ratio.height * Math.max(xFactor * scaleVtm, 1)) / 2;
 
@@ -169,7 +195,7 @@ export const panzoom = (node, params = {}) => {
 		f = f >= 1 ? 1 : -1;
 		const ff = velocity.getVelocity(touchA, touchB) || 1;
 		const xFactor = 1 + 0.1 * ff * f;
-		const yFactor = (xFactor * container.clientHeight) / container.clientWidth;
+		const yFactor = xFactor; // (xFactor * container.clientHeight) / container.clientWidth;
 		let in_x = (container.clientWidth - ratio.width * matrix.vtm.a) / 2;
 		let in_y = (container.clientHeight - ratio.height * matrix.vtm.a) / 2;
 
@@ -190,15 +216,15 @@ export const panzoom = (node, params = {}) => {
 			f
 		);
 
-		node.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
 		scale.value = mat.d;
 		scale.lastHypo = hypo;
 		scale.scaling = true;
+		node.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
 	}
 
 	function fireManualZoom(dir) {
 		const xFactor = 1 + 0.2 * dir;
-		const yFactor = (xFactor * container.clientHeight) / container.clientWidth;
+		const yFactor = xFactor; // (xFactor * container.clientHeight) / container.clientWidth;
 		let in_x = (container.clientWidth - ratio.width * matrix.vtm.a) / 2;
 		let in_y = (container.clientHeight - ratio.height * matrix.vtm.a) / 2;
 		const origin = {
@@ -217,8 +243,8 @@ export const panzoom = (node, params = {}) => {
 			scale.value * xFactor,
 			dir
 		);
-		node.style.transform = `translate(${mat.e}px,${mat.f}px) scale(${mat.a})`;
 		scale.value = mat.d;
+		node.style.transform = `translate(${mat.e}px,${mat.f}px) scale(${mat.a})`;
 	}
 
 	function onWheel(e) {
@@ -226,7 +252,7 @@ export const panzoom = (node, params = {}) => {
 		const dir = e.deltaY < 0 ? 1 : -1;
 
 		const xFactor = 1 + 0.1 * dir;
-		const yFactor = (xFactor * container.clientHeight) / container.clientWidth;
+		const yFactor = xFactor; // (xFactor * node.clientHeight) / node.clientWidth;
 
 		let in_x = (container.clientWidth - ratio.width * matrix.vtm.a) / 2;
 		let in_y = (container.clientHeight - ratio.height * matrix.vtm.a) / 2;
@@ -252,9 +278,9 @@ export const panzoom = (node, params = {}) => {
 			dir
 		);
 
-		node.style.transform = `translate(${mat.e}px,${mat.f}px) scale(${mat.a})`;
-
 		scale.value = mat.d;
+
+		node.style.transform = `translate(${mat.e}px,${mat.f}px) scale(${mat.a})`;
 
 		node.dispatchEvent(
 			new CustomEvent('zoomed', {
@@ -310,7 +336,10 @@ export const panzoom = (node, params = {}) => {
 		node.removeEventListener('touchcancel', onTouchEnd);
 	}
 
-	function onMouseDown({ clientX, clientY }) {
+	function onMouseDown(e) {
+		console.log('onMouseDown', { target: e.target });
+		// if (e.target !== node && e.target.parentNode !== node) return;
+		const { clientX, clientY } = e;
 		if (touchScreen) return;
 		fireDown(clientX, clientY);
 		smooth = false;
@@ -328,6 +357,10 @@ export const panzoom = (node, params = {}) => {
 	}
 
 	return {
+		update(params) {
+			// 1 = in, -1 = out
+			console.log('Directive updated params', { params });
+		},
 		destroy() {
 			// container listeners
 			node.removeEventListener('wheel', onWheel);
@@ -338,6 +371,9 @@ export const panzoom = (node, params = {}) => {
 
 			// window listeners
 			window.removeEventListener('resize', onResize);
+
+			// stop observing
+			observer.disconnect();
 		}
 	};
 };
