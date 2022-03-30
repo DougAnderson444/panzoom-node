@@ -58,11 +58,11 @@ export const panzoom = (node, params = {}) => {
 	onLoad();
 
 	// container listeners
-	node.addEventListener('wheel', onWheel, { passive: false });
-	node.addEventListener('mousedown', onMouseDown, { passive: false });
-	node.addEventListener('touchstart', onTouchStart, { passive: false });
 	node.addEventListener('dragstart', onDragStart, { passive: false });
 	node.addEventListener('drag', onDragStart, { passive: false });
+	container.addEventListener('mousedown', onMouseDown, { passive: false });
+	container.addEventListener('touchstart', onTouchStart, { passive: false });
+	container.addEventListener('wheel', onWheel, { passive: false });
 	container.addEventListener('dragstart', onDragStart, { passive: false });
 	container.addEventListener('drag', onDragStart, { passive: false });
 
@@ -337,14 +337,19 @@ export const panzoom = (node, params = {}) => {
 	}
 
 	function onMouseDown(e) {
-		console.log('onMouseDown', { target: e.target });
-		// if (e.target !== node && e.target.parentNode !== node) return;
+		if (
+			container !== e.target &&
+			node !== e.target
+			// node !== e.target.parentNode &&
+		) {
+			return;
+		}
 		const { clientX, clientY } = e;
 		if (touchScreen) return;
 		fireDown(clientX, clientY);
 		smooth = false;
-		node.addEventListener('mousemove', onMouseMove);
-		node.addEventListener('mouseup', onMouseUp);
+		container.addEventListener('mousemove', onMouseMove);
+		container.addEventListener('mouseup', onMouseUp);
 	}
 
 	function onMouseMove({ clientX, clientY }) {
@@ -352,7 +357,7 @@ export const panzoom = (node, params = {}) => {
 	}
 
 	function onMouseUp() {
-		node.removeEventListener('mousemove', onMouseMove);
+		container.removeEventListener('mousemove', onMouseMove);
 		fireUp();
 	}
 
