@@ -186,6 +186,12 @@ export const panzoom = (node, params = {}) => {
 		);
 		scale.value = mat.d;
 		node.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
+
+		node.dispatchEvent(
+			new CustomEvent('zoomed', {
+				detail: { scale, matrix, origin }
+			})
+		);
 	}
 
 	function fireScaleMove(touchA, touchB, e) {
@@ -219,6 +225,11 @@ export const panzoom = (node, params = {}) => {
 		scale.lastHypo = hypo;
 		scale.scaling = true;
 		node.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
+		node.dispatchEvent(
+			new CustomEvent('zoomed', {
+				detail: { style: node.style, scale, matrix, origin }
+			})
+		);
 	}
 
 	function fireManualZoom(dir) {
@@ -244,6 +255,12 @@ export const panzoom = (node, params = {}) => {
 		);
 		scale.value = mat.d;
 		node.style.transform = `translate(${mat.e}px,${mat.f}px) scale(${mat.a})`;
+
+		node.dispatchEvent(
+			new CustomEvent('zoomed', {
+				detail: { style: node.style, scale, matrix, origin }
+			})
+		);
 	}
 
 	function onWheel(e) {
