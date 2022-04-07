@@ -83,7 +83,6 @@ export const panzoom = (node, params = {}) => {
 				const re = /(\w+)\(([^)]*)\)/g;
 				while ((m = re.exec(node.style['transform']))) {
 					if (m[1] == 'scale' && parseFloat(m[2]).toFixed(2) != scale.value.toFixed(2)) {
-						console.log({ m }, parseFloat(m[2]).toFixed(2), scale.value.toFixed(2));
 						scale.value = m[2];
 					}
 				}
@@ -134,7 +133,7 @@ export const panzoom = (node, params = {}) => {
 		xY.newX = xY.initX - x;
 		xY.newY = xY.initY - y;
 		const mat = matrix.move(xY.newX, xY.newY, in_x, in_y, ratio); // rm clamp
-		console.log('Move');
+
 		node.style.transform = `matrix(${mat.a},${mat.b},${mat.c},${mat.d},${mat.e}, ${mat.f})`;
 	}
 
