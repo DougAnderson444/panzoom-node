@@ -1,12 +1,19 @@
 <script>
 	import { panzoom } from '$lib/panzoom.js';
 	import Spot from '$lib/_components/Spot.svelte';
+	import RangeSlider from 'svelte-range-slider-pips';
 
 	let zoomable, container;
 	let style = ''; // show styling applied
 	let scale = { value: 1 };
 	let count = 10;
 	let min = count;
+	let manualZoom = [1];
+	// $: if (scale?.value) manualZoom = [scale.value]; // match the directive scale level
+	$: if (manualZoom) {
+		console.log({ manualZoom });
+		setZoom(manualZoom);
+	}
 
 	function handleZoom(e) {
 		console.log('Zoomed.', { detail: e.detail });
@@ -17,6 +24,39 @@
 	const grid = Array.from({ length: count }, (_, i) =>
 		Array.from({ length: count }, (_, j) => ({ id: i * count + j }))
 	);
+
+	// manual zoom
+	function setZoom(val) {
+		console.log('Zoom to ', val, zoomable?.style['transform']);
+		if (!zoomable) return;
+		if (!zoomable?.style) {
+			console.log('Setting Zoom to scale only');
+			zoomable.style['transform'] = `scale(${val})`;
+			return;
+		}
+		let m;
+		let s = '';
+
+		const re = /(\w+)\(([^)]*)\)/g;
+		while ((m = re.exec(zoomable?.style['transform']))) {
+			console.log({ m });
+
+			if (m[1] == 'matrix') {
+				let piece = m[2].split(', ');
+				console.log({ piece });
+				s = `translate(${piece[4]}px, ${piece[5]}px) scale(${val})`;
+				console.log('matrixed', { s });
+				zoomable.style['transform'] = s;
+				return;
+			} else if (m[1] == 'scale') {
+				s += ` scale(${val})`;
+			} else {
+				s += m[0];
+			}
+		}
+		console.log({ s });
+		zoomable.style['transform'] = s;
+	}
 </script>
 
 <div>
@@ -30,12 +70,24 @@
 <div class="container" bind:this={container}>
 	<div class="menu">
 		<div>
-			Zoom Level: {scale.value}
+			Zoom Level: {scale.value.toFixed(5)} || {JSON.stringify(manualZoom)}
+			{#if manualZoom}
+				<div>
+					<RangeSlider
+						pips
+						min={0.5}
+						step={0.5}
+						max={scale?.max || 20}
+						float
+						bind:values={manualZoom}
+					/>
+				</div>
+			{/if}
 		</div>
 
 		<div>Style: {style}</div>
 	</div>
-	<div class="zoomable flexbox" bind:this={zoomable} use:panzoom on:zoomed={handleZoom}>
+	<div class="zoomable flexbox" bind:this={zoomable} use:panzoom={{ scale }} on:zoomed={handleZoom}>
 		{#if container}
 			<div class="grid">
 				{#each grid as col, x}

@@ -1,4 +1,4 @@
-import { SvelteComponent, init, safe_not_equal, element, claim_element, children, detach, set_style, attr, insert_hydration, noop, transition_in, space, claim_space, append_hydration, create_component, claim_component, mount_component, transition_out, destroy_component, check_outros, destroy_each, text, claim_text, action_destroyer, listen, set_data, run_all, group_outros, binding_callbacks } from "../chunks/vendor-15451ce5.js";
+import { SvelteComponent, init, safe_not_equal, element, claim_element, children, detach, set_style, attr, insert_hydration, noop, create_component, claim_component, mount_component, add_flush_callback, transition_in, transition_out, destroy_component, space, claim_space, append_hydration, check_outros, destroy_each, text, claim_text, action_destroyer, listen, set_data, is_function, run_all, RangeSlider, binding_callbacks, bind, group_outros } from "../chunks/vendor-4503c6b9.js";
 class Matrix {
   constructor({ container }) {
     this.container = container;
@@ -8,19 +8,19 @@ class Matrix {
     this.captureScale = 1;
     this.stop = false;
   }
-  clamp(scale2, in_x, in_y, ratio2) {
+  clamp(scale, in_x, in_y, ratio2) {
     let xx = (this.container.clientWidth - ratio2.width) / 2;
     let yy = (this.container.clientHeight - ratio2.height) / 2;
-    let limit_max_right_formula = xx * scale2 + ratio2.width * scale2 - this.container.clientWidth;
+    let limit_max_right_formula = xx * scale + ratio2.width * scale - this.container.clientWidth;
     let same_x = Math.min(this.vtm.e * 1, 0);
     let same_y = Math.min(this.vtm.f * 1, 0);
-    let value1 = in_x > 0 ? same_x : -(xx * scale2);
+    let value1 = in_x > 0 ? same_x : -(xx * scale);
     let value2 = in_x > 0 ? same_x : -limit_max_right_formula;
     let limit_x_axis = this.vtm.e;
     limit_x_axis = Math.max(value2, this.vtm.e);
     limit_x_axis = Math.min(value1, limit_x_axis);
-    let limit_max_bottom_formula = yy * scale2 + ratio2.height * scale2 - this.container.clientHeight;
-    let limit_max_top = in_y > 0 ? same_y : -(yy * scale2);
+    let limit_max_bottom_formula = yy * scale + ratio2.height * scale - this.container.clientHeight;
+    let limit_max_top = in_y > 0 ? same_y : -(yy * scale);
     let limit_max_bottom = in_y > 0 ? same_y : -limit_max_bottom_formula;
     let limit_y_axis = this.vtm.f;
     limit_y_axis = Math.min(limit_max_top, limit_y_axis);
@@ -96,31 +96,54 @@ let lastTap = {
   x: 0,
   y: 0
 };
-let scale = {
-  scaling: false,
-  x1: 0,
-  x2: 0,
-  y1: 0,
-  y2: 0,
-  lastHypo: 0,
-  originX: 0,
-  originY: 0,
-  value: 1,
-  max: 20
-};
 const panzoom = (node, params = {}) => {
+  var _a;
+  let scale = {
+    scaling: false,
+    x1: 0,
+    x2: 0,
+    y1: 0,
+    y2: 0,
+    lastHypo: 0,
+    originX: 0,
+    originY: 0,
+    value: ((_a = params == null ? void 0 : params.scale) == null ? void 0 : _a.value) || 1,
+    max: 20
+  };
   let container = node.parentElement || document.body;
   container.style["touch-action"] = "none";
   container.style["user-select"] = "none";
   container.style["overflow"] = "hidden";
+  container.style["position"] = "relative";
+  node.style["touch-action"] = "none";
+  node.style["user-select"] = "none";
+  node.style["position"] = "absolute";
+  node.style["height"] = "100%";
+  node.style["width"] = "100%";
   matrix = new Matrix({ container });
   onLoad();
-  container.addEventListener("wheel", onWheel, { passive: false });
+  node.addEventListener("dragstart", onDragStart, { passive: false });
+  node.addEventListener("drag", onDragStart, { passive: false });
   container.addEventListener("mousedown", onMouseDown, { passive: false });
   container.addEventListener("touchstart", onTouchStart, { passive: false });
+  container.addEventListener("wheel", onWheel, { passive: false });
   container.addEventListener("dragstart", onDragStart, { passive: false });
   container.addEventListener("drag", onDragStart, { passive: false });
   window.addEventListener("resize", onResize);
+  const observer = new MutationObserver((mutationsList, observer2) => {
+    for (const mutation of mutationsList) {
+      if (mutation.type === "attributes") {
+        let m;
+        const re = /(\w+)\(([^)]*)\)/g;
+        while (m = re.exec(node.style["transform"])) {
+          if (m[1] == "scale" && parseFloat(m[2]).toFixed(2) != scale.value.toFixed(2)) {
+            scale.value = m[2];
+          }
+        }
+      }
+    }
+  });
+  observer.observe(node, { attributes: true, childList: false, subtree: false });
   function onDragStart(e) {
     console.log("Removing drag listener");
     return false;
@@ -149,7 +172,6 @@ const panzoom = (node, params = {}) => {
     xY.newX = xY.initX - x;
     xY.newY = xY.initY - y;
     const mat = matrix.move(xY.newX, xY.newY, in_x, in_y, ratio);
-    console.log("Move");
     node.style.transform = `matrix(${mat.a},${mat.b},${mat.c},${mat.d},${mat.e}, ${mat.f})`;
   }
   function fireUp() {
@@ -174,7 +196,7 @@ const panzoom = (node, params = {}) => {
     let scale_value = scaleVtm > 1 ? scaleVtm - 1 : scale.max / 2.5;
     let scale_factor = scaleVtm > 1 ? -1 : 1;
     const xFactor = 1 + scale_value * scale_factor;
-    const yFactor = xFactor * container.clientHeight / container.clientWidth;
+    const yFactor = xFactor;
     let in_x = (container.clientWidth - ratio.width * Math.max(xFactor * scaleVtm, 1)) / 2;
     let in_y = (container.clientHeight - ratio.height * Math.max(xFactor * scaleVtm, 1)) / 2;
     const origin = {
@@ -184,6 +206,9 @@ const panzoom = (node, params = {}) => {
     const mat = matrix.scale(xFactor, yFactor, origin, in_x, in_y, ratio, scale.max, scale.value * xFactor, scale_factor);
     scale.value = mat.d;
     node.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
+    node.dispatchEvent(new CustomEvent("zoomed", {
+      detail: { scale, matrix, origin }
+    }));
   }
   function fireScaleMove(touchA, touchB, e) {
     const hypo = getDistance(touchA, touchB);
@@ -191,7 +216,7 @@ const panzoom = (node, params = {}) => {
     f = f >= 1 ? 1 : -1;
     const ff = velocity.getVelocity(touchA, touchB) || 1;
     const xFactor = 1 + 0.1 * ff * f;
-    const yFactor = xFactor * container.clientHeight / container.clientWidth;
+    const yFactor = xFactor;
     let in_x = (container.clientWidth - ratio.width * matrix.vtm.a) / 2;
     let in_y = (container.clientHeight - ratio.height * matrix.vtm.a) / 2;
     const origin = {
@@ -199,16 +224,19 @@ const panzoom = (node, params = {}) => {
       y: scale.originY - container.clientHeight / 2 - container.offsetTop
     };
     const mat = matrix.scale(xFactor, yFactor, origin, in_x, in_y, ratio, scale.max, scale.value * xFactor, f);
-    node.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
     scale.value = mat.d;
     scale.lastHypo = hypo;
     scale.scaling = true;
+    node.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
+    node.dispatchEvent(new CustomEvent("zoomed", {
+      detail: { style: node.style, scale, matrix, origin }
+    }));
   }
   function onWheel(e) {
     e.preventDefault();
     const dir = e.deltaY < 0 ? 1 : -1;
     const xFactor = 1 + 0.1 * dir;
-    const yFactor = xFactor * container.clientHeight / container.clientWidth;
+    const yFactor = xFactor;
     let in_x = (container.clientWidth - ratio.width * matrix.vtm.a) / 2;
     let in_y = (container.clientHeight - ratio.height * matrix.vtm.a) / 2;
     const origin = {
@@ -216,8 +244,8 @@ const panzoom = (node, params = {}) => {
       y: e.pageY - container.clientHeight / 2 - container.offsetTop
     };
     const mat = matrix.scale(xFactor, yFactor, origin, in_x, in_y, ratio, scale.max, scale.value * xFactor, dir);
-    node.style.transform = `translate(${mat.e}px,${mat.f}px) scale(${mat.a})`;
     scale.value = mat.d;
+    node.style.transform = `translate(${mat.e}px,${mat.f}px) scale(${mat.a})`;
     node.dispatchEvent(new CustomEvent("zoomed", {
       detail: { style: node.style, scale, matrix, origin }
     }));
@@ -244,10 +272,10 @@ const panzoom = (node, params = {}) => {
         y: pageY
       };
     }
-    container.removeEventListener("touchmove", onTouchMove);
-    container.removeEventListener("touchend", onTouchEnd);
-    container.addEventListener("touchmove", onTouchMove);
-    container.addEventListener("touchend", onTouchEnd);
+    node.removeEventListener("touchmove", onTouchMove);
+    node.removeEventListener("touchend", onTouchEnd);
+    node.addEventListener("touchmove", onTouchMove);
+    node.addEventListener("touchend", onTouchEnd);
   }
   function onTouchMove(e) {
     if (scale.scaling) {
@@ -259,11 +287,15 @@ const panzoom = (node, params = {}) => {
   }
   function onTouchEnd(e) {
     fireUp();
-    container.removeEventListener("touchmove", onTouchMove);
-    container.removeEventListener("touchend", onTouchEnd);
-    container.removeEventListener("touchcancel", onTouchEnd);
+    node.removeEventListener("touchmove", onTouchMove);
+    node.removeEventListener("touchend", onTouchEnd);
+    node.removeEventListener("touchcancel", onTouchEnd);
   }
-  function onMouseDown({ clientX, clientY }) {
+  function onMouseDown(e) {
+    if (container !== e.target && node !== e.target) {
+      return;
+    }
+    const { clientX, clientY } = e;
     if (touchScreen)
       return;
     fireDown(clientX, clientY);
@@ -278,13 +310,17 @@ const panzoom = (node, params = {}) => {
     fireUp();
   }
   return {
+    update(params2) {
+      console.log("Directive updated params", { params: params2 });
+    },
     destroy() {
-      container.removeEventListener("wheel", onWheel);
-      container.removeEventListener("mousedown", onMouseDown);
-      container.removeEventListener("touchstart", onTouchStart);
-      container.removeEventListener("dragstart", onDragStart);
-      container.addEventListener("drag", onDragStart);
+      node.removeEventListener("wheel", onWheel);
+      node.removeEventListener("mousedown", onMouseDown);
+      node.removeEventListener("touchstart", onTouchStart);
+      node.removeEventListener("dragstart", onDragStart);
+      node.addEventListener("drag", onDragStart);
       window.removeEventListener("resize", onResize);
+      observer.disconnect();
     }
   };
 };
@@ -349,20 +385,86 @@ class Spot extends SvelteComponent {
 var index_svelte_svelte_type_style_lang = "";
 function get_each_context(ctx, list, i) {
   const child_ctx = ctx.slice();
-  child_ctx[9] = list[i];
-  child_ctx[11] = i;
-  return child_ctx;
-}
-function get_each_context_1(ctx, list, i) {
-  const child_ctx = ctx.slice();
   child_ctx[12] = list[i];
   child_ctx[14] = i;
   return child_ctx;
 }
+function get_each_context_1(ctx, list, i) {
+  const child_ctx = ctx.slice();
+  child_ctx[15] = list[i];
+  child_ctx[17] = i;
+  return child_ctx;
+}
+function create_if_block_1(ctx) {
+  var _a;
+  let div;
+  let rangeslider;
+  let updating_values;
+  let current;
+  function rangeslider_values_binding(value) {
+    ctx[8](value);
+  }
+  let rangeslider_props = {
+    pips: true,
+    min: 0.5,
+    step: 0.5,
+    max: ((_a = ctx[4]) == null ? void 0 : _a.max) || 20,
+    float: true
+  };
+  if (ctx[0] !== void 0) {
+    rangeslider_props.values = ctx[0];
+  }
+  rangeslider = new RangeSlider({ props: rangeslider_props });
+  binding_callbacks.push(() => bind(rangeslider, "values", rangeslider_values_binding));
+  return {
+    c() {
+      div = element("div");
+      create_component(rangeslider.$$.fragment);
+    },
+    l(nodes) {
+      div = claim_element(nodes, "DIV", {});
+      var div_nodes = children(div);
+      claim_component(rangeslider.$$.fragment, div_nodes);
+      div_nodes.forEach(detach);
+    },
+    m(target, anchor) {
+      insert_hydration(target, div, anchor);
+      mount_component(rangeslider, div, null);
+      current = true;
+    },
+    p(ctx2, dirty) {
+      var _a2;
+      const rangeslider_changes = {};
+      if (dirty & 16)
+        rangeslider_changes.max = ((_a2 = ctx2[4]) == null ? void 0 : _a2.max) || 20;
+      if (!updating_values && dirty & 1) {
+        updating_values = true;
+        rangeslider_changes.values = ctx2[0];
+        add_flush_callback(() => updating_values = false);
+      }
+      rangeslider.$set(rangeslider_changes);
+    },
+    i(local) {
+      if (current)
+        return;
+      transition_in(rangeslider.$$.fragment, local);
+      current = true;
+    },
+    o(local) {
+      transition_out(rangeslider.$$.fragment, local);
+      current = false;
+    },
+    d(detaching) {
+      if (detaching)
+        detach(div);
+      destroy_component(rangeslider);
+    }
+  };
+}
 function create_if_block(ctx) {
   let div;
   let current;
-  let each_value = ctx[6];
+  let each_value = ctx[7];
   let each_blocks = [];
   for (let i = 0; i < each_value.length; i += 1) {
     each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
@@ -398,8 +500,8 @@ function create_if_block(ctx) {
       current = true;
     },
     p(ctx2, dirty) {
-      if (dirty & 82) {
-        each_value = ctx2[6];
+      if (dirty & 164) {
+        each_value = ctx2[7];
         let i;
         for (i = 0; i < each_value.length; i += 1) {
           const child_ctx = get_each_context(ctx2, each_value, i);
@@ -447,8 +549,8 @@ function create_each_block_1(ctx) {
   let current;
   spot = new Spot({
     props: {
-      left: ctx[4] + ctx[11] * ctx[1].offsetWidth / count,
-      top: ctx[4] + ctx[14] * ctx[1].offsetWidth / count
+      left: ctx[5] + ctx[14] * ctx[2].offsetWidth / count,
+      top: ctx[5] + ctx[17] * ctx[2].offsetWidth / count
     }
   });
   return {
@@ -464,10 +566,10 @@ function create_each_block_1(ctx) {
     },
     p(ctx2, dirty) {
       const spot_changes = {};
-      if (dirty & 2)
-        spot_changes.left = ctx2[4] + ctx2[11] * ctx2[1].offsetWidth / count;
-      if (dirty & 2)
-        spot_changes.top = ctx2[4] + ctx2[14] * ctx2[1].offsetWidth / count;
+      if (dirty & 4)
+        spot_changes.left = ctx2[5] + ctx2[14] * ctx2[2].offsetWidth / count;
+      if (dirty & 4)
+        spot_changes.top = ctx2[5] + ctx2[17] * ctx2[2].offsetWidth / count;
       spot.$set(spot_changes);
     },
     i(local) {
@@ -489,7 +591,7 @@ function create_each_block(ctx) {
   let div;
   let t;
   let current;
-  let each_value_1 = ctx[9];
+  let each_value_1 = ctx[12];
   let each_blocks = [];
   for (let i = 0; i < each_value_1.length; i += 1) {
     each_blocks[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
@@ -528,8 +630,8 @@ function create_each_block(ctx) {
       current = true;
     },
     p(ctx2, dirty) {
-      if (dirty & 18) {
-        each_value_1 = ctx2[9];
+      if (dirty & 36) {
+        each_value_1 = ctx2[12];
         let i;
         for (i = 0; i < each_value_1.length; i += 1) {
           const child_ctx = get_each_context_1(ctx2, each_value_1, i);
@@ -590,18 +692,24 @@ function create_fragment(ctx) {
   let div3;
   let div1;
   let t8;
-  let t9_value = ctx[3].value + "";
+  let t9_value = ctx[4].value.toFixed(5) + "";
   let t9;
   let t10;
-  let div2;
+  let t11_value = JSON.stringify(ctx[0]) + "";
   let t11;
   let t12;
   let t13;
+  let div2;
+  let t14;
+  let t15;
+  let t16;
   let div4;
+  let panzoom_action;
   let current;
   let mounted;
   let dispose;
-  let if_block = ctx[1] && create_if_block(ctx);
+  let if_block0 = ctx[0] && create_if_block_1(ctx);
+  let if_block1 = ctx[2] && create_if_block(ctx);
   return {
     c() {
       div0 = element("div");
@@ -622,14 +730,19 @@ function create_fragment(ctx) {
       div1 = element("div");
       t8 = text("Zoom Level: ");
       t9 = text(t9_value);
-      t10 = space();
-      div2 = element("div");
-      t11 = text("Style: ");
-      t12 = text(ctx[2]);
+      t10 = text(" || ");
+      t11 = text(t11_value);
+      t12 = space();
+      if (if_block0)
+        if_block0.c();
       t13 = space();
+      div2 = element("div");
+      t14 = text("Style: ");
+      t15 = text(ctx[3]);
+      t16 = space();
       div4 = element("div");
-      if (if_block)
-        if_block.c();
+      if (if_block1)
+        if_block1.c();
       this.h();
     },
     l(nodes) {
@@ -664,27 +777,32 @@ function create_fragment(ctx) {
       var div1_nodes = children(div1);
       t8 = claim_text(div1_nodes, "Zoom Level: ");
       t9 = claim_text(div1_nodes, t9_value);
+      t10 = claim_text(div1_nodes, " || ");
+      t11 = claim_text(div1_nodes, t11_value);
+      t12 = claim_space(div1_nodes);
+      if (if_block0)
+        if_block0.l(div1_nodes);
       div1_nodes.forEach(detach);
-      t10 = claim_space(div3_nodes);
+      t13 = claim_space(div3_nodes);
       div2 = claim_element(div3_nodes, "DIV", {});
       var div2_nodes = children(div2);
-      t11 = claim_text(div2_nodes, "Style: ");
-      t12 = claim_text(div2_nodes, ctx[2]);
+      t14 = claim_text(div2_nodes, "Style: ");
+      t15 = claim_text(div2_nodes, ctx[3]);
       div2_nodes.forEach(detach);
       div3_nodes.forEach(detach);
-      t13 = claim_space(div5_nodes);
+      t16 = claim_space(div5_nodes);
       div4 = claim_element(div5_nodes, "DIV", { class: true });
       var div4_nodes = children(div4);
-      if (if_block)
-        if_block.l(div4_nodes);
+      if (if_block1)
+        if_block1.l(div4_nodes);
       div4_nodes.forEach(detach);
       div5_nodes.forEach(detach);
       this.h();
     },
     h() {
-      attr(div3, "class", "menu svelte-1j7lp5w");
-      attr(div4, "class", "zoomable flexbox svelte-1j7lp5w");
-      attr(div5, "class", "container svelte-1j7lp5w");
+      attr(div3, "class", "menu svelte-1teec0a");
+      attr(div4, "class", "zoomable flexbox svelte-1teec0a");
+      attr(div5, "class", "container svelte-1teec0a");
     },
     m(target, anchor) {
       insert_hydration(target, div0, anchor);
@@ -705,58 +823,88 @@ function create_fragment(ctx) {
       append_hydration(div3, div1);
       append_hydration(div1, t8);
       append_hydration(div1, t9);
-      append_hydration(div3, t10);
+      append_hydration(div1, t10);
+      append_hydration(div1, t11);
+      append_hydration(div1, t12);
+      if (if_block0)
+        if_block0.m(div1, null);
+      append_hydration(div3, t13);
       append_hydration(div3, div2);
-      append_hydration(div2, t11);
-      append_hydration(div2, t12);
-      append_hydration(div5, t13);
+      append_hydration(div2, t14);
+      append_hydration(div2, t15);
+      append_hydration(div5, t16);
       append_hydration(div5, div4);
-      if (if_block)
-        if_block.m(div4, null);
-      ctx[7](div4);
-      ctx[8](div5);
+      if (if_block1)
+        if_block1.m(div4, null);
+      ctx[9](div4);
+      ctx[10](div5);
       current = true;
       if (!mounted) {
         dispose = [
-          action_destroyer(panzoom.call(null, div4)),
-          listen(div4, "zoomed", ctx[5])
+          action_destroyer(panzoom_action = panzoom.call(null, div4, { scale: ctx[4] })),
+          listen(div4, "zoomed", ctx[6])
         ];
         mounted = true;
       }
     },
     p(ctx2, [dirty]) {
-      if ((!current || dirty & 8) && t9_value !== (t9_value = ctx2[3].value + ""))
+      if ((!current || dirty & 16) && t9_value !== (t9_value = ctx2[4].value.toFixed(5) + ""))
         set_data(t9, t9_value);
-      if (!current || dirty & 4)
-        set_data(t12, ctx2[2]);
-      if (ctx2[1]) {
-        if (if_block) {
-          if_block.p(ctx2, dirty);
-          if (dirty & 2) {
-            transition_in(if_block, 1);
+      if ((!current || dirty & 1) && t11_value !== (t11_value = JSON.stringify(ctx2[0]) + ""))
+        set_data(t11, t11_value);
+      if (ctx2[0]) {
+        if (if_block0) {
+          if_block0.p(ctx2, dirty);
+          if (dirty & 1) {
+            transition_in(if_block0, 1);
           }
         } else {
-          if_block = create_if_block(ctx2);
-          if_block.c();
-          transition_in(if_block, 1);
-          if_block.m(div4, null);
+          if_block0 = create_if_block_1(ctx2);
+          if_block0.c();
+          transition_in(if_block0, 1);
+          if_block0.m(div1, null);
         }
-      } else if (if_block) {
+      } else if (if_block0) {
         group_outros();
-        transition_out(if_block, 1, 1, () => {
-          if_block = null;
+        transition_out(if_block0, 1, 1, () => {
+          if_block0 = null;
         });
         check_outros();
       }
+      if (!current || dirty & 8)
+        set_data(t15, ctx2[3]);
+      if (ctx2[2]) {
+        if (if_block1) {
+          if_block1.p(ctx2, dirty);
+          if (dirty & 4) {
+            transition_in(if_block1, 1);
+          }
+        } else {
+          if_block1 = create_if_block(ctx2);
+          if_block1.c();
+          transition_in(if_block1, 1);
+          if_block1.m(div4, null);
+        }
+      } else if (if_block1) {
+        group_outros();
+        transition_out(if_block1, 1, 1, () => {
+          if_block1 = null;
+        });
+        check_outros();
+      }
+      if (panzoom_action && is_function(panzoom_action.update) && dirty & 16)
+        panzoom_action.update.call(null, { scale: ctx2[4] });
     },
     i(local) {
       if (current)
         return;
-      transition_in(if_block);
+      transition_in(if_block0);
+      transition_in(if_block1);
       current = true;
     },
     o(local) {
-      transition_out(if_block);
+      transition_out(if_block0);
+      transition_out(if_block1);
       current = false;
     },
     d(detaching) {
@@ -766,10 +914,12 @@ function create_fragment(ctx) {
         detach(t7);
       if (detaching)
         detach(div5);
-      if (if_block)
-        if_block.d();
-      ctx[7](null);
-      ctx[8](null);
+      if (if_block0)
+        if_block0.d();
+      if (if_block1)
+        if_block1.d();
+      ctx[9](null);
+      ctx[10](null);
       mounted = false;
       run_all(dispose);
     }
@@ -779,34 +929,79 @@ let count = 10;
 function instance($$self, $$props, $$invalidate) {
   let zoomable, container;
   let style = "";
-  let scale2 = { value: 1 };
+  let scale = { value: 1 };
   let min = count;
+  let manualZoom = [1];
   function handleZoom(e) {
     console.log("Zoomed.", { detail: e.detail });
-    $$invalidate(3, scale2 = e.detail.scale);
-    $$invalidate(2, style = zoomable.style.transform);
+    $$invalidate(4, scale = e.detail.scale);
+    $$invalidate(3, style = zoomable.style.transform);
   }
   const grid = Array.from({ length: count }, (_, i) => Array.from({ length: count }, (_2, j) => ({ id: i * count + j })));
+  function setZoom(val) {
+    console.log("Zoom to ", val, zoomable == null ? void 0 : zoomable.style["transform"]);
+    if (!zoomable)
+      return;
+    if (!(zoomable == null ? void 0 : zoomable.style)) {
+      console.log("Setting Zoom to scale only");
+      $$invalidate(1, zoomable.style["transform"] = `scale(${val})`, zoomable);
+      return;
+    }
+    let m;
+    let s = "";
+    const re = /(\w+)\(([^)]*)\)/g;
+    while (m = re.exec(zoomable == null ? void 0 : zoomable.style["transform"])) {
+      console.log({ m });
+      if (m[1] == "matrix") {
+        let piece = m[2].split(", ");
+        console.log({ piece });
+        s = `translate(${piece[4]}px, ${piece[5]}px) scale(${val})`;
+        console.log("matrixed", { s });
+        $$invalidate(1, zoomable.style["transform"] = s, zoomable);
+        return;
+      } else if (m[1] == "scale") {
+        s += ` scale(${val})`;
+      } else {
+        s += m[0];
+      }
+    }
+    console.log({ s });
+    $$invalidate(1, zoomable.style["transform"] = s, zoomable);
+  }
+  function rangeslider_values_binding(value) {
+    manualZoom = value;
+    $$invalidate(0, manualZoom);
+  }
   function div4_binding($$value) {
     binding_callbacks[$$value ? "unshift" : "push"](() => {
       zoomable = $$value;
-      $$invalidate(0, zoomable);
+      $$invalidate(1, zoomable);
     });
   }
   function div5_binding($$value) {
     binding_callbacks[$$value ? "unshift" : "push"](() => {
       container = $$value;
-      $$invalidate(1, container);
+      $$invalidate(2, container);
     });
   }
+  $$self.$$.update = () => {
+    if ($$self.$$.dirty & 1) {
+      if (manualZoom) {
+        console.log({ manualZoom });
+        setZoom(manualZoom);
+      }
+    }
+  };
   return [
+    manualZoom,
     zoomable,
     container,
     style,
-    scale2,
+    scale,
     min,
     handleZoom,
     grid,
+    rangeslider_values_binding,
     div4_binding,
     div5_binding
   ];
@@ -818,4 +1013,4 @@ class Routes extends SvelteComponent {
   }
 }
 export { Routes as default };
-//# sourceMappingURL=index.svelte-69f0d3a9.js.map
+//# sourceMappingURL=index.svelte-1b1e9322.js.map
