@@ -58,8 +58,6 @@ export const panzoom = (node, params = {}) => {
 	onLoad();
 
 	// container listeners
-	node.addEventListener('dragstart', onDragStart, { passive: false });
-	node.addEventListener('drag', onDragStart, { passive: false });
 	container.addEventListener('mousedown', onMouseDown, { passive: false });
 	container.addEventListener('touchstart', onTouchStart, { passive: false });
 	container.addEventListener('wheel', onWheel, { passive: false });
@@ -312,6 +310,13 @@ export const panzoom = (node, params = {}) => {
 		const [touchA, touchB] = e.touches;
 		scale.scaling = isMultiTouch;
 		smooth = false;
+
+		node.dispatchEvent(
+			new CustomEvent('touchlog', {
+				detail: { isMultiTouch }
+			})
+		);
+
 		if (isMultiTouch) {
 			fireScale(touchA, touchB);
 			velocity.down(touchA, touchB);
