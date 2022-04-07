@@ -51,6 +51,6 @@ element.appendChild(node);
 panzoom(node);
 ```
 
-## Optional Zoom Container
+## Zoom Container
 
 The zoomable HTML node will be contained within the parent element as a container. If no container is set, it will use the parent element as the default container, using the `<body>` as the container if there's no parent element.
