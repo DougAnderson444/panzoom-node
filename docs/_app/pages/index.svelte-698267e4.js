@@ -1,671 +1,5 @@
-function noop$1() {
-}
-function assign(tar, src) {
-  for (const k in src)
-    tar[k] = src[k];
-  return tar;
-}
-function run(fn) {
-  return fn();
-}
-function blank_object() {
-  return /* @__PURE__ */ Object.create(null);
-}
-function run_all(fns) {
-  fns.forEach(run);
-}
-function is_function(thing) {
-  return typeof thing === "function";
-}
-function safe_not_equal(a, b) {
-  return a != a ? b == b : a !== b || (a && typeof a === "object" || typeof a === "function");
-}
-function is_empty(obj) {
-  return Object.keys(obj).length === 0;
-}
-function subscribe(store, ...callbacks) {
-  if (store == null) {
-    return noop$1;
-  }
-  const unsub = store.subscribe(...callbacks);
-  return unsub.unsubscribe ? () => unsub.unsubscribe() : unsub;
-}
-function create_slot(definition, ctx, $$scope, fn) {
-  if (definition) {
-    const slot_ctx = get_slot_context(definition, ctx, $$scope, fn);
-    return definition[0](slot_ctx);
-  }
-}
-function get_slot_context(definition, ctx, $$scope, fn) {
-  return definition[1] && fn ? assign($$scope.ctx.slice(), definition[1](fn(ctx))) : $$scope.ctx;
-}
-function get_slot_changes(definition, $$scope, dirty, fn) {
-  if (definition[2] && fn) {
-    const lets = definition[2](fn(dirty));
-    if ($$scope.dirty === void 0) {
-      return lets;
-    }
-    if (typeof lets === "object") {
-      const merged = [];
-      const len = Math.max($$scope.dirty.length, lets.length);
-      for (let i = 0; i < len; i += 1) {
-        merged[i] = $$scope.dirty[i] | lets[i];
-      }
-      return merged;
-    }
-    return $$scope.dirty | lets;
-  }
-  return $$scope.dirty;
-}
-function update_slot_base(slot, slot_definition, ctx, $$scope, slot_changes, get_slot_context_fn) {
-  if (slot_changes) {
-    const slot_context = get_slot_context(slot_definition, ctx, $$scope, get_slot_context_fn);
-    slot.p(slot_context, slot_changes);
-  }
-}
-function get_all_dirty_from_scope($$scope) {
-  if ($$scope.ctx.length > 32) {
-    const dirty = [];
-    const length = $$scope.ctx.length / 32;
-    for (let i = 0; i < length; i++) {
-      dirty[i] = -1;
-    }
-    return dirty;
-  }
-  return -1;
-}
-function action_destroyer(action_result) {
-  return action_result && is_function(action_result.destroy) ? action_result.destroy : noop$1;
-}
-const is_client = typeof window !== "undefined";
-let now = is_client ? () => window.performance.now() : () => Date.now();
-let raf = is_client ? (cb) => requestAnimationFrame(cb) : noop$1;
-const tasks = /* @__PURE__ */ new Set();
-function run_tasks(now2) {
-  tasks.forEach((task) => {
-    if (!task.c(now2)) {
-      tasks.delete(task);
-      task.f();
-    }
-  });
-  if (tasks.size !== 0)
-    raf(run_tasks);
-}
-function loop(callback) {
-  let task;
-  if (tasks.size === 0)
-    raf(run_tasks);
-  return {
-    promise: new Promise((fulfill) => {
-      tasks.add(task = { c: callback, f: fulfill });
-    }),
-    abort() {
-      tasks.delete(task);
-    }
-  };
-}
-let is_hydrating = false;
-function start_hydrating() {
-  is_hydrating = true;
-}
-function end_hydrating() {
-  is_hydrating = false;
-}
-function upper_bound(low, high, key, value) {
-  while (low < high) {
-    const mid = low + (high - low >> 1);
-    if (key(mid) <= value) {
-      low = mid + 1;
-    } else {
-      high = mid;
-    }
-  }
-  return low;
-}
-function init_hydrate(target) {
-  if (target.hydrate_init)
-    return;
-  target.hydrate_init = true;
-  let children2 = target.childNodes;
-  if (target.nodeName === "HEAD") {
-    const myChildren = [];
-    for (let i = 0; i < children2.length; i++) {
-      const node = children2[i];
-      if (node.claim_order !== void 0) {
-        myChildren.push(node);
-      }
-    }
-    children2 = myChildren;
-  }
-  const m = new Int32Array(children2.length + 1);
-  const p = new Int32Array(children2.length);
-  m[0] = -1;
-  let longest = 0;
-  for (let i = 0; i < children2.length; i++) {
-    const current = children2[i].claim_order;
-    const seqLen = (longest > 0 && children2[m[longest]].claim_order <= current ? longest + 1 : upper_bound(1, longest, (idx) => children2[m[idx]].claim_order, current)) - 1;
-    p[i] = m[seqLen] + 1;
-    const newLen = seqLen + 1;
-    m[newLen] = i;
-    longest = Math.max(newLen, longest);
-  }
-  const lis = [];
-  const toMove = [];
-  let last = children2.length - 1;
-  for (let cur = m[longest] + 1; cur != 0; cur = p[cur - 1]) {
-    lis.push(children2[cur - 1]);
-    for (; last >= cur; last--) {
-      toMove.push(children2[last]);
-    }
-    last--;
-  }
-  for (; last >= 0; last--) {
-    toMove.push(children2[last]);
-  }
-  lis.reverse();
-  toMove.sort((a, b) => a.claim_order - b.claim_order);
-  for (let i = 0, j = 0; i < toMove.length; i++) {
-    while (j < lis.length && toMove[i].claim_order >= lis[j].claim_order) {
-      j++;
-    }
-    const anchor = j < lis.length ? lis[j] : null;
-    target.insertBefore(toMove[i], anchor);
-  }
-}
-function append_hydration(target, node) {
-  if (is_hydrating) {
-    init_hydrate(target);
-    if (target.actual_end_child === void 0 || target.actual_end_child !== null && target.actual_end_child.parentElement !== target) {
-      target.actual_end_child = target.firstChild;
-    }
-    while (target.actual_end_child !== null && target.actual_end_child.claim_order === void 0) {
-      target.actual_end_child = target.actual_end_child.nextSibling;
-    }
-    if (node !== target.actual_end_child) {
-      if (node.claim_order !== void 0 || node.parentNode !== target) {
-        target.insertBefore(node, target.actual_end_child);
-      }
-    } else {
-      target.actual_end_child = node.nextSibling;
-    }
-  } else if (node.parentNode !== target || node.nextSibling !== null) {
-    target.appendChild(node);
-  }
-}
-function insert_hydration(target, node, anchor) {
-  if (is_hydrating && !anchor) {
-    append_hydration(target, node);
-  } else if (node.parentNode !== target || node.nextSibling != anchor) {
-    target.insertBefore(node, anchor || null);
-  }
-}
-function detach(node) {
-  node.parentNode.removeChild(node);
-}
-function destroy_each(iterations, detaching) {
-  for (let i = 0; i < iterations.length; i += 1) {
-    if (iterations[i])
-      iterations[i].d(detaching);
-  }
-}
-function element(name) {
-  return document.createElement(name);
-}
-function text(data) {
-  return document.createTextNode(data);
-}
-function space() {
-  return text(" ");
-}
-function empty() {
-  return text("");
-}
-function listen(node, event, handler, options) {
-  node.addEventListener(event, handler, options);
-  return () => node.removeEventListener(event, handler, options);
-}
-function prevent_default(fn) {
-  return function(event) {
-    event.preventDefault();
-    return fn.call(this, event);
-  };
-}
-function attr(node, attribute, value) {
-  if (value == null)
-    node.removeAttribute(attribute);
-  else if (node.getAttribute(attribute) !== value)
-    node.setAttribute(attribute, value);
-}
-function children(element2) {
-  return Array.from(element2.childNodes);
-}
-function init_claim_info(nodes) {
-  if (nodes.claim_info === void 0) {
-    nodes.claim_info = { last_index: 0, total_claimed: 0 };
-  }
-}
-function claim_node(nodes, predicate, processNode, createNode, dontUpdateLastIndex = false) {
-  init_claim_info(nodes);
-  const resultNode = (() => {
-    for (let i = nodes.claim_info.last_index; i < nodes.length; i++) {
-      const node = nodes[i];
-      if (predicate(node)) {
-        const replacement = processNode(node);
-        if (replacement === void 0) {
-          nodes.splice(i, 1);
-        } else {
-          nodes[i] = replacement;
-        }
-        if (!dontUpdateLastIndex) {
-          nodes.claim_info.last_index = i;
-        }
-        return node;
-      }
-    }
-    for (let i = nodes.claim_info.last_index - 1; i >= 0; i--) {
-      const node = nodes[i];
-      if (predicate(node)) {
-        const replacement = processNode(node);
-        if (replacement === void 0) {
-          nodes.splice(i, 1);
-        } else {
-          nodes[i] = replacement;
-        }
-        if (!dontUpdateLastIndex) {
-          nodes.claim_info.last_index = i;
-        } else if (replacement === void 0) {
-          nodes.claim_info.last_index--;
-        }
-        return node;
-      }
-    }
-    return createNode();
-  })();
-  resultNode.claim_order = nodes.claim_info.total_claimed;
-  nodes.claim_info.total_claimed += 1;
-  return resultNode;
-}
-function claim_element_base(nodes, name, attributes, create_element) {
-  return claim_node(nodes, (node) => node.nodeName === name, (node) => {
-    const remove = [];
-    for (let j = 0; j < node.attributes.length; j++) {
-      const attribute = node.attributes[j];
-      if (!attributes[attribute.name]) {
-        remove.push(attribute.name);
-      }
-    }
-    remove.forEach((v) => node.removeAttribute(v));
-    return void 0;
-  }, () => create_element(name));
-}
-function claim_element(nodes, name, attributes) {
-  return claim_element_base(nodes, name, attributes, element);
-}
-function claim_text(nodes, data) {
-  return claim_node(nodes, (node) => node.nodeType === 3, (node) => {
-    const dataStr = "" + data;
-    if (node.data.startsWith(dataStr)) {
-      if (node.data.length !== dataStr.length) {
-        return node.splitText(dataStr.length);
-      }
-    } else {
-      node.data = dataStr;
-    }
-  }, () => text(data), true);
-}
-function claim_space(nodes) {
-  return claim_text(nodes, " ");
-}
-function set_data(text2, data) {
-  data = "" + data;
-  if (text2.wholeText !== data)
-    text2.data = data;
-}
-function set_style(node, key, value, important) {
-  if (value === null) {
-    node.style.removeProperty(key);
-  } else {
-    node.style.setProperty(key, value, important ? "important" : "");
-  }
-}
-function toggle_class(element2, name, toggle) {
-  element2.classList[toggle ? "add" : "remove"](name);
-}
-function custom_event(type, detail, bubbles = false) {
-  const e = document.createEvent("CustomEvent");
-  e.initCustomEvent(type, bubbles, false, detail);
-  return e;
-}
-let current_component;
-function set_current_component(component) {
-  current_component = component;
-}
-function get_current_component() {
-  if (!current_component)
-    throw new Error("Function called outside component initialization");
-  return current_component;
-}
-function onMount(fn) {
-  get_current_component().$$.on_mount.push(fn);
-}
-function afterUpdate(fn) {
-  get_current_component().$$.after_update.push(fn);
-}
-function createEventDispatcher() {
-  const component = get_current_component();
-  return (type, detail) => {
-    const callbacks = component.$$.callbacks[type];
-    if (callbacks) {
-      const event = custom_event(type, detail);
-      callbacks.slice().forEach((fn) => {
-        fn.call(component, event);
-      });
-    }
-  };
-}
-function setContext(key, context) {
-  get_current_component().$$.context.set(key, context);
-}
-const dirty_components = [];
-const binding_callbacks = [];
-const render_callbacks = [];
-const flush_callbacks = [];
-const resolved_promise = Promise.resolve();
-let update_scheduled = false;
-function schedule_update() {
-  if (!update_scheduled) {
-    update_scheduled = true;
-    resolved_promise.then(flush);
-  }
-}
-function tick() {
-  schedule_update();
-  return resolved_promise;
-}
-function add_render_callback(fn) {
-  render_callbacks.push(fn);
-}
-function add_flush_callback(fn) {
-  flush_callbacks.push(fn);
-}
-const seen_callbacks = /* @__PURE__ */ new Set();
-let flushidx = 0;
-function flush() {
-  const saved_component = current_component;
-  do {
-    while (flushidx < dirty_components.length) {
-      const component = dirty_components[flushidx];
-      flushidx++;
-      set_current_component(component);
-      update(component.$$);
-    }
-    set_current_component(null);
-    dirty_components.length = 0;
-    flushidx = 0;
-    while (binding_callbacks.length)
-      binding_callbacks.pop()();
-    for (let i = 0; i < render_callbacks.length; i += 1) {
-      const callback = render_callbacks[i];
-      if (!seen_callbacks.has(callback)) {
-        seen_callbacks.add(callback);
-        callback();
-      }
-    }
-    render_callbacks.length = 0;
-  } while (dirty_components.length);
-  while (flush_callbacks.length) {
-    flush_callbacks.pop()();
-  }
-  update_scheduled = false;
-  seen_callbacks.clear();
-  set_current_component(saved_component);
-}
-function update($$) {
-  if ($$.fragment !== null) {
-    $$.update();
-    run_all($$.before_update);
-    const dirty = $$.dirty;
-    $$.dirty = [-1];
-    $$.fragment && $$.fragment.p($$.ctx, dirty);
-    $$.after_update.forEach(add_render_callback);
-  }
-}
-const outroing = /* @__PURE__ */ new Set();
-let outros;
-function group_outros() {
-  outros = {
-    r: 0,
-    c: [],
-    p: outros
-  };
-}
-function check_outros() {
-  if (!outros.r) {
-    run_all(outros.c);
-  }
-  outros = outros.p;
-}
-function transition_in(block, local) {
-  if (block && block.i) {
-    outroing.delete(block);
-    block.i(local);
-  }
-}
-function transition_out(block, local, detach2, callback) {
-  if (block && block.o) {
-    if (outroing.has(block))
-      return;
-    outroing.add(block);
-    outros.c.push(() => {
-      outroing.delete(block);
-      if (callback) {
-        if (detach2)
-          block.d(1);
-        callback();
-      }
-    });
-    block.o(local);
-  }
-}
-function get_spread_update(levels, updates) {
-  const update2 = {};
-  const to_null_out = {};
-  const accounted_for = { $$scope: 1 };
-  let i = levels.length;
-  while (i--) {
-    const o = levels[i];
-    const n = updates[i];
-    if (n) {
-      for (const key in o) {
-        if (!(key in n))
-          to_null_out[key] = 1;
-      }
-      for (const key in n) {
-        if (!accounted_for[key]) {
-          update2[key] = n[key];
-          accounted_for[key] = 1;
-        }
-      }
-      levels[i] = n;
-    } else {
-      for (const key in o) {
-        accounted_for[key] = 1;
-      }
-    }
-  }
-  for (const key in to_null_out) {
-    if (!(key in update2))
-      update2[key] = void 0;
-  }
-  return update2;
-}
-function get_spread_object(spread_props) {
-  return typeof spread_props === "object" && spread_props !== null ? spread_props : {};
-}
-function bind(component, name, callback) {
-  const index2 = component.$$.props[name];
-  if (index2 !== void 0) {
-    component.$$.bound[index2] = callback;
-    callback(component.$$.ctx[index2]);
-  }
-}
-function create_component(block) {
-  block && block.c();
-}
-function claim_component(block, parent_nodes) {
-  block && block.l(parent_nodes);
-}
-function mount_component(component, target, anchor, customElement) {
-  const { fragment, on_mount, on_destroy, after_update } = component.$$;
-  fragment && fragment.m(target, anchor);
-  if (!customElement) {
-    add_render_callback(() => {
-      const new_on_destroy = on_mount.map(run).filter(is_function);
-      if (on_destroy) {
-        on_destroy.push(...new_on_destroy);
-      } else {
-        run_all(new_on_destroy);
-      }
-      component.$$.on_mount = [];
-    });
-  }
-  after_update.forEach(add_render_callback);
-}
-function destroy_component(component, detaching) {
-  const $$ = component.$$;
-  if ($$.fragment !== null) {
-    run_all($$.on_destroy);
-    $$.fragment && $$.fragment.d(detaching);
-    $$.on_destroy = $$.fragment = null;
-    $$.ctx = [];
-  }
-}
-function make_dirty(component, i) {
-  if (component.$$.dirty[0] === -1) {
-    dirty_components.push(component);
-    schedule_update();
-    component.$$.dirty.fill(0);
-  }
-  component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
-}
-function init(component, options, instance2, create_fragment2, not_equal, props, append_styles, dirty = [-1]) {
-  const parent_component = current_component;
-  set_current_component(component);
-  const $$ = component.$$ = {
-    fragment: null,
-    ctx: null,
-    props,
-    update: noop$1,
-    not_equal,
-    bound: blank_object(),
-    on_mount: [],
-    on_destroy: [],
-    on_disconnect: [],
-    before_update: [],
-    after_update: [],
-    context: new Map(options.context || (parent_component ? parent_component.$$.context : [])),
-    callbacks: blank_object(),
-    dirty,
-    skip_bound: false,
-    root: options.target || parent_component.$$.root
-  };
-  append_styles && append_styles($$.root);
-  let ready = false;
-  $$.ctx = instance2 ? instance2(component, options.props || {}, (i, ret, ...rest) => {
-    const value = rest.length ? rest[0] : ret;
-    if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
-      if (!$$.skip_bound && $$.bound[i])
-        $$.bound[i](value);
-      if (ready)
-        make_dirty(component, i);
-    }
-    return ret;
-  }) : [];
-  $$.update();
-  ready = true;
-  run_all($$.before_update);
-  $$.fragment = create_fragment2 ? create_fragment2($$.ctx) : false;
-  if (options.target) {
-    if (options.hydrate) {
-      start_hydrating();
-      const nodes = children(options.target);
-      $$.fragment && $$.fragment.l(nodes);
-      nodes.forEach(detach);
-    } else {
-      $$.fragment && $$.fragment.c();
-    }
-    if (options.intro)
-      transition_in(component.$$.fragment);
-    mount_component(component, options.target, options.anchor, options.customElement);
-    end_hydrating();
-    flush();
-  }
-  set_current_component(parent_component);
-}
-class SvelteComponent {
-  $destroy() {
-    destroy_component(this, 1);
-    this.$destroy = noop$1;
-  }
-  $on(type, callback) {
-    const callbacks = this.$$.callbacks[type] || (this.$$.callbacks[type] = []);
-    callbacks.push(callback);
-    return () => {
-      const index2 = callbacks.indexOf(callback);
-      if (index2 !== -1)
-        callbacks.splice(index2, 1);
-    };
-  }
-  $set($$props) {
-    if (this.$$set && !is_empty($$props)) {
-      this.$$.skip_bound = true;
-      this.$$set($$props);
-      this.$$.skip_bound = false;
-    }
-  }
-}
-const subscriber_queue = [];
-function writable(value, start = noop$1) {
-  let stop;
-  const subscribers = /* @__PURE__ */ new Set();
-  function set(new_value) {
-    if (safe_not_equal(value, new_value)) {
-      value = new_value;
-      if (stop) {
-        const run_queue = !subscriber_queue.length;
-        for (const subscriber of subscribers) {
-          subscriber[1]();
-          subscriber_queue.push(subscriber, value);
-        }
-        if (run_queue) {
-          for (let i = 0; i < subscriber_queue.length; i += 2) {
-            subscriber_queue[i][0](subscriber_queue[i + 1]);
-          }
-          subscriber_queue.length = 0;
-        }
-      }
-    }
-  }
-  function update2(fn) {
-    set(fn(value));
-  }
-  function subscribe2(run2, invalidate = noop$1) {
-    const subscriber = [run2, invalidate];
-    subscribers.add(subscriber);
-    if (subscribers.size === 1) {
-      stop = start(set) || noop$1;
-    }
-    run2(value);
-    return () => {
-      subscribers.delete(subscriber);
-      if (subscribers.size === 0) {
-        stop();
-        stop = null;
-      }
-    };
-  }
-  return { set, update: update2, subscribe: subscribe2 };
-}
+import { SvelteComponent, init, safe_not_equal, element, claim_element, children, detach, set_style, attr, insert_hydration, noop as noop$1, now, loop, toggle_class, listen, is_function, prevent_default, text, claim_text, append_hydration, set_data, run_all, empty, space, claim_space, destroy_each, create_component, claim_component, mount_component, transition_in, transition_out, destroy_component, group_outros, check_outros, createEventDispatcher, subscribe, binding_callbacks, add_flush_callback, action_destroyer, bind } from "../chunks/index-21dc824a.js";
+import { writable } from "../chunks/index-eb09cf72.js";
 class Pointer {
   constructor(nativePointer) {
     this.id = -1;
@@ -814,6 +148,297 @@ class PointerTracker {
     return true;
   }
 }
+var styles = "";
+const minScaleAttr = "min-scale";
+function getDistance(a, b) {
+  if (!b)
+    return 0;
+  return Math.sqrt((b.clientX - a.clientX) ** 2 + (b.clientY - a.clientY) ** 2);
+}
+function getMidpoint(a, b) {
+  if (!b)
+    return a;
+  return {
+    clientX: (a.clientX + b.clientX) / 2,
+    clientY: (a.clientY + b.clientY) / 2
+  };
+}
+function getAbsoluteValue(value, max) {
+  if (typeof value === "number")
+    return value;
+  if (value.trimRight().endsWith("%")) {
+    return max * parseFloat(value) / 100;
+  }
+  return parseFloat(value);
+}
+function createMatrix() {
+  return new DOMMatrix();
+}
+function createPoint() {
+  return new DOMPoint();
+}
+const MIN_SCALE = 0.01;
+class PinchZoom {
+  constructor(node) {
+    this._transform = createMatrix();
+    this._node = node;
+    this._parentEl = this._node.parentElement || document.body;
+    new MutationObserver(() => this._stageElChange()).observe(this._node, { childList: true });
+    this._pointerTracker = new PointerTracker(this._parentEl, {
+      eventListenerOptions: { capture: true },
+      start: (pointer, event) => {
+        if (this._pointerTracker.currentPointers.length === 2 || !this._parentEl)
+          return false;
+        event.preventDefault();
+        if (this._pointerTracker.currentPointers.length === 1) {
+          event.stopPropagation();
+          return true;
+        }
+        if (this._pointerTracker.currentPointers.length === 0) {
+          return true;
+        }
+      },
+      move: (previousPointers, changedPointers, event) => {
+        if (this._pointerTracker.currentPointers.length === 0)
+          return;
+        if (this._pointerTracker.currentPointers.length === 1 && !(event.target == this._parentEl || event.target == node))
+          return;
+        event.stopPropagation();
+        this._onPointerMove(previousPointers, this._pointerTracker.currentPointers);
+      },
+      end: (pointer, event, cancelled) => {
+      }
+    });
+    this._parentEl.addEventListener("wheel", (event) => this._onWheel(event));
+  }
+  static get observedAttributes() {
+    return [minScaleAttr];
+  }
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === minScaleAttr) {
+      if (this.scale < this.minScale) {
+        this.setTransform({ scale: this.minScale });
+      }
+    }
+  }
+  get minScale() {
+    const attrValue = this._node.getAttribute(minScaleAttr);
+    if (!attrValue)
+      return MIN_SCALE;
+    const value = parseFloat(attrValue);
+    if (Number.isFinite(value))
+      return Math.max(MIN_SCALE, value);
+    return MIN_SCALE;
+  }
+  set minScale(value) {
+    this._node.setAttribute(minScaleAttr, String(value));
+  }
+  connectedCallback() {
+    this._stageElChange();
+  }
+  get x() {
+    return this._transform.e;
+  }
+  get y() {
+    return this._transform.f;
+  }
+  get scale() {
+    return this._transform.a;
+  }
+  scaleTo(scale, opts = {}) {
+    let { originX = 0, originY = 0 } = opts;
+    const { relativeTo = "content", allowChangeEvent = false } = opts;
+    const relativeToEl = relativeTo === "content" ? this._parentEl : this._node;
+    if (!relativeToEl || !this._parentEl) {
+      this.setTransform({ scale, allowChangeEvent });
+      return;
+    }
+    const rect = relativeToEl.getBoundingClientRect();
+    originX = getAbsoluteValue(originX, rect.width);
+    originY = getAbsoluteValue(originY, rect.height);
+    if (relativeTo === "content") {
+      originX += this.x;
+      originY += this.y;
+    } else {
+      const currentRect = this._parentEl.getBoundingClientRect();
+      originX -= currentRect.left;
+      originY -= currentRect.top;
+    }
+    this._applyChange({
+      allowChangeEvent,
+      originX,
+      originY,
+      scaleDiff: scale / this.scale
+    });
+  }
+  setTransform(opts = {}) {
+    const { scale = this.scale, allowChangeEvent = false } = opts;
+    let { x = this.x, y = this.y } = opts;
+    if (!this._parentEl) {
+      this._updateTransform(scale, x, y, allowChangeEvent);
+      return;
+    }
+    const thisBounds = this._node.getBoundingClientRect();
+    const parentElBounds = this._parentEl.getBoundingClientRect();
+    if (!thisBounds.width || !thisBounds.height) {
+      this._updateTransform(scale, x, y, allowChangeEvent);
+      return;
+    }
+    let topLeft = createPoint();
+    topLeft.x = parentElBounds.left - thisBounds.left;
+    topLeft.y = parentElBounds.top - thisBounds.top;
+    let bottomRight = createPoint();
+    bottomRight.x = parentElBounds.width + topLeft.x;
+    bottomRight.y = parentElBounds.height + topLeft.y;
+    const matrix = createMatrix().translate(x, y).scale(scale).multiply(this._transform.inverse());
+    topLeft = topLeft.matrixTransform(matrix);
+    bottomRight = bottomRight.matrixTransform(matrix);
+    this._updateTransform(scale, x, y, allowChangeEvent);
+  }
+  _updateTransform(scale, x, y, allowChangeEvent) {
+    if (scale < this.minScale)
+      return;
+    if (scale === this.scale && x === this.x && y === this.y)
+      return;
+    this._transform.e = x;
+    this._transform.f = y;
+    this._transform.d = this._transform.a = scale;
+    this._node.style.transform = `translate(${x}px,${y}px) scale(${scale})`;
+    if (allowChangeEvent) {
+      const event = new Event("change", { bubbles: true });
+      this._node.dispatchEvent(event);
+    }
+  }
+  _stageElChange() {
+    this._parentEl = this._node.parentElement || document.body;
+    this.setTransform({ allowChangeEvent: true });
+  }
+  _onWheel(event) {
+    if (!this._parentEl)
+      return;
+    event.preventDefault();
+    this._parentEl.getBoundingClientRect();
+    let { deltaY } = event;
+    const { ctrlKey, deltaMode } = event;
+    if (deltaMode === 1) {
+      deltaY *= 15;
+    }
+    const divisor = ctrlKey ? 200 : 600;
+    const scaleDiff = 1 - deltaY / divisor;
+    this._applyChange({
+      scaleDiff,
+      originX: event.pageX - this._parentEl.offsetLeft - this._parentEl.clientWidth / 2,
+      originY: event.pageY - this._parentEl.offsetTop - this._parentEl.clientHeight / 2,
+      allowChangeEvent: true
+    });
+  }
+  _onPointerMove(previousPointers, currentPointers) {
+    if (!this._parentEl)
+      return;
+    const currentRect = this._parentEl.getBoundingClientRect();
+    const prevMidpoint = getMidpoint(previousPointers[0], previousPointers[1]);
+    const newMidpoint = getMidpoint(currentPointers[0], currentPointers[1]);
+    const originX = prevMidpoint.clientX - currentRect.left - currentRect.width / 2;
+    const originY = prevMidpoint.clientY - currentRect.top - currentRect.height / 2;
+    const prevDistance = getDistance(previousPointers[0], previousPointers[1]);
+    const newDistance = getDistance(currentPointers[0], currentPointers[1]);
+    const scaleDiff = prevDistance ? newDistance / prevDistance : 1;
+    this._applyChange({
+      originX,
+      originY,
+      scaleDiff,
+      panX: newMidpoint.clientX - prevMidpoint.clientX,
+      panY: newMidpoint.clientY - prevMidpoint.clientY,
+      allowChangeEvent: true
+    });
+  }
+  _applyChange(opts = {}) {
+    const {
+      panX = 0,
+      panY = 0,
+      originX = 0,
+      originY = 0,
+      scaleDiff = 1,
+      allowChangeEvent = false
+    } = opts;
+    const matrix = createMatrix().translate(panX, panY).translate(originX, originY).scale(scaleDiff).translate(-originX, -originY).multiply(this._transform);
+    this.setTransform({
+      allowChangeEvent,
+      scale: matrix.a,
+      x: matrix.e,
+      y: matrix.f
+    });
+  }
+}
+const pzoom = (node, params = {}) => {
+  let container = node.parentElement || document.body;
+  container.style["touch-action"] = "none";
+  container.style["user-select"] = "none";
+  container.style["overflow"] = "hidden";
+  container.style["position"] = "relative";
+  node.style["touch-action"] = "none";
+  node.style["user-select"] = "none";
+  node.style["position"] = "absolute";
+  new PinchZoom(node);
+};
+var Spot_svelte_svelte_type_style_lang = "";
+function create_fragment$3(ctx) {
+  let div;
+  return {
+    c() {
+      div = element("div");
+      this.h();
+    },
+    l(nodes) {
+      div = claim_element(nodes, "DIV", { style: true, class: true });
+      var div_nodes = children(div);
+      div_nodes.forEach(detach);
+      this.h();
+    },
+    h() {
+      set_style(div, "top", ctx[1] + "px");
+      set_style(div, "left", ctx[0] + "px");
+      set_style(div, "--color", ctx[2]);
+      attr(div, "class", "svelte-m6n0ej");
+    },
+    m(target, anchor) {
+      insert_hydration(target, div, anchor);
+    },
+    p(ctx2, [dirty]) {
+      if (dirty & 2) {
+        set_style(div, "top", ctx2[1] + "px");
+      }
+      if (dirty & 1) {
+        set_style(div, "left", ctx2[0] + "px");
+      }
+    },
+    i: noop$1,
+    o: noop$1,
+    d(detaching) {
+      if (detaching)
+        detach(div);
+    }
+  };
+}
+let range = 9;
+function instance$3($$self, $$props, $$invalidate) {
+  let { left = (1 << range) * Math.random() | 10 } = $$props;
+  let { top = (1 << range) * Math.random() | 10 } = $$props;
+  let color = "#" + ((1 << 24) * Math.random() | 4095).toString(16);
+  $$self.$$set = ($$props2) => {
+    if ("left" in $$props2)
+      $$invalidate(0, left = $$props2.left);
+    if ("top" in $$props2)
+      $$invalidate(1, top = $$props2.top);
+  };
+  return [left, top, color];
+}
+class Spot extends SvelteComponent {
+  constructor(options) {
+    super();
+    init(this, options, instance$3, create_fragment$3, safe_not_equal, { left: 0, top: 1 });
+  }
+}
 function is_date(obj) {
   return Object.prototype.toString.call(obj) === "[object Date]";
 }
@@ -912,7 +537,7 @@ function spring(value, opts = {}) {
   return spring2;
 }
 var RangePips_svelte_svelte_type_style_lang = "";
-function get_each_context$1(ctx, list, i) {
+function get_each_context$2(ctx, list, i) {
   const child_ctx = ctx.slice();
   child_ctx[28] = list[i];
   child_ctx[30] = i;
@@ -1144,7 +769,7 @@ function create_if_block_4$1(ctx) {
   let each_value = Array(ctx[20] + 1);
   let each_blocks = [];
   for (let i = 0; i < each_value.length; i += 1) {
-    each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
+    each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
   }
   return {
     c() {
@@ -1170,11 +795,11 @@ function create_if_block_4$1(ctx) {
         each_value = Array(ctx2[20] + 1);
         let i;
         for (i = 0; i < each_value.length; i += 1) {
-          const child_ctx = get_each_context$1(ctx2, each_value, i);
+          const child_ctx = get_each_context$2(ctx2, each_value, i);
           if (each_blocks[i]) {
             each_blocks[i].p(child_ctx, dirty);
           } else {
-            each_blocks[i] = create_each_block$1(child_ctx);
+            each_blocks[i] = create_each_block$2(child_ctx);
             each_blocks[i].c();
             each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
           }
@@ -1417,7 +1042,7 @@ function create_if_block_7(ctx) {
     }
   };
 }
-function create_each_block$1(ctx) {
+function create_each_block$2(ctx) {
   let show_if = ctx[19](ctx[30]) !== ctx[0] && ctx[19](ctx[30]) !== ctx[1];
   let if_block_anchor;
   let if_block = show_if && create_if_block_5(ctx);
@@ -1461,12 +1086,12 @@ function create_each_block$1(ctx) {
     }
   };
 }
-function create_if_block$1(ctx) {
+function create_if_block$2(ctx) {
   let span;
   let span_style_value;
   let mounted;
   let dispose;
-  let if_block = (ctx[6] === "label" || ctx[8] === "label") && create_if_block_1$1(ctx);
+  let if_block = (ctx[6] === "label" || ctx[8] === "label") && create_if_block_1$2(ctx);
   return {
     c() {
       span = element("span");
@@ -1512,7 +1137,7 @@ function create_if_block$1(ctx) {
         if (if_block) {
           if_block.p(ctx, dirty);
         } else {
-          if_block = create_if_block_1$1(ctx);
+          if_block = create_if_block_1$2(ctx);
           if_block.c();
           if_block.m(span, null);
         }
@@ -1540,7 +1165,7 @@ function create_if_block$1(ctx) {
     }
   };
 }
-function create_if_block_1$1(ctx) {
+function create_if_block_1$2(ctx) {
   let span;
   let t_value = ctx[12](ctx[16](ctx[1]), ctx[20], 100) + "";
   let t;
@@ -1682,13 +1307,13 @@ function create_if_block_2$1(ctx) {
     }
   };
 }
-function create_fragment$1(ctx) {
+function create_fragment$2(ctx) {
   let div;
   let t0;
   let t1;
   let if_block0 = (ctx[6] && ctx[7] !== false || ctx[7]) && create_if_block_9(ctx);
   let if_block1 = (ctx[6] && ctx[9] !== false || ctx[9]) && create_if_block_4$1(ctx);
-  let if_block2 = (ctx[6] && ctx[8] !== false || ctx[8]) && create_if_block$1(ctx);
+  let if_block2 = (ctx[6] && ctx[8] !== false || ctx[8]) && create_if_block$2(ctx);
   return {
     c() {
       div = element("div");
@@ -1764,7 +1389,7 @@ function create_fragment$1(ctx) {
         if (if_block2) {
           if_block2.p(ctx2, dirty);
         } else {
-          if_block2 = create_if_block$1(ctx2);
+          if_block2 = create_if_block$2(ctx2);
           if_block2.c();
           if_block2.m(div, null);
         }
@@ -1802,13 +1427,13 @@ function create_fragment$1(ctx) {
     }
   };
 }
-function instance$1($$self, $$props, $$invalidate) {
+function instance$2($$self, $$props, $$invalidate) {
   let pipStep;
   let pipCount;
   let pipVal;
   let isSelected;
   let inRange;
-  let { range = false } = $$props;
+  let { range: range2 = false } = $$props;
   let { min = 0 } = $$props;
   let { max = 100 } = $$props;
   let { step = 1 } = $$props;
@@ -1837,7 +1462,7 @@ function instance$1($$self, $$props, $$invalidate) {
   }
   $$self.$$set = ($$props2) => {
     if ("range" in $$props2)
-      $$invalidate(22, range = $$props2.range);
+      $$invalidate(22, range2 = $$props2.range);
     if ("min" in $$props2)
       $$invalidate(0, min = $$props2.min);
     if ("max" in $$props2)
@@ -1900,11 +1525,11 @@ function instance$1($$self, $$props, $$invalidate) {
     }
     if ($$self.$$.dirty & 20971520) {
       $$invalidate(17, inRange = function(val) {
-        if (range === "min") {
+        if (range2 === "min") {
           return values[0] > val;
-        } else if (range === "max") {
+        } else if (range2 === "max") {
           return values[0] < val;
-        } else if (range) {
+        } else if (range2) {
           return values[0] < val && values[1] > val;
         }
       });
@@ -1933,7 +1558,7 @@ function instance$1($$self, $$props, $$invalidate) {
     pipVal,
     pipCount,
     labelClick,
-    range,
+    range2,
     step,
     values,
     pipstep,
@@ -1944,7 +1569,7 @@ function instance$1($$self, $$props, $$invalidate) {
 class RangePips extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance$1, create_fragment$1, safe_not_equal, {
+    init(this, options, instance$2, create_fragment$2, safe_not_equal, {
       range: 22,
       min: 0,
       max: 1,
@@ -1971,7 +1596,7 @@ class RangePips extends SvelteComponent {
   }
 }
 var RangeSlider_svelte_svelte_type_style_lang = "";
-function get_each_context(ctx, list, i) {
+function get_each_context$1(ctx, list, i) {
   const child_ctx = ctx.slice();
   child_ctx[64] = list[i];
   child_ctx[66] = i;
@@ -2119,7 +1744,7 @@ function create_if_block_3(ctx) {
     }
   };
 }
-function create_each_block(ctx) {
+function create_each_block$1(ctx) {
   let span1;
   let span0;
   let t;
@@ -2256,7 +1881,7 @@ function create_each_block(ctx) {
     }
   };
 }
-function create_if_block_1(ctx) {
+function create_if_block_1$1(ctx) {
   let span;
   let span_style_value;
   return {
@@ -2287,7 +1912,7 @@ function create_if_block_1(ctx) {
     }
   };
 }
-function create_if_block(ctx) {
+function create_if_block$1(ctx) {
   let rangepips;
   let current;
   rangepips = new RangePips({
@@ -2386,7 +2011,7 @@ function create_if_block(ctx) {
     }
   };
 }
-function create_fragment(ctx) {
+function create_fragment$1(ctx) {
   let div;
   let t0;
   let t1;
@@ -2396,10 +2021,10 @@ function create_fragment(ctx) {
   let each_value = ctx[0];
   let each_blocks = [];
   for (let i = 0; i < each_value.length; i += 1) {
-    each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+    each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
   }
-  let if_block0 = ctx[2] && create_if_block_1(ctx);
-  let if_block1 = ctx[11] && create_if_block(ctx);
+  let if_block0 = ctx[2] && create_if_block_1$1(ctx);
+  let if_block1 = ctx[11] && create_if_block$1(ctx);
   return {
     c() {
       div = element("div");
@@ -2478,11 +2103,11 @@ function create_fragment(ctx) {
         each_value = ctx2[0];
         let i;
         for (i = 0; i < each_value.length; i += 1) {
-          const child_ctx = get_each_context(ctx2, each_value, i);
+          const child_ctx = get_each_context$1(ctx2, each_value, i);
           if (each_blocks[i]) {
             each_blocks[i].p(child_ctx, dirty);
           } else {
-            each_blocks[i] = create_each_block(child_ctx);
+            each_blocks[i] = create_each_block$1(child_ctx);
             each_blocks[i].c();
             each_blocks[i].m(div, t0);
           }
@@ -2496,7 +2121,7 @@ function create_fragment(ctx) {
         if (if_block0) {
           if_block0.p(ctx2, dirty);
         } else {
-          if_block0 = create_if_block_1(ctx2);
+          if_block0 = create_if_block_1$1(ctx2);
           if_block0.c();
           if_block0.m(div, t1);
         }
@@ -2511,7 +2136,7 @@ function create_fragment(ctx) {
             transition_in(if_block1, 1);
           }
         } else {
-          if_block1 = create_if_block(ctx2);
+          if_block1 = create_if_block$1(ctx2);
           if_block1.c();
           transition_in(if_block1, 1);
           if_block1.m(div, null);
@@ -2597,7 +2222,7 @@ function normalisedClient(e) {
     return e;
   }
 }
-function instance($$self, $$props, $$invalidate) {
+function instance$1($$self, $$props, $$invalidate) {
   let percentOf;
   let clampValue;
   let alignValueToStep;
@@ -2606,7 +2231,7 @@ function instance($$self, $$props, $$invalidate) {
   let $springPositions, $$unsubscribe_springPositions = noop$1, $$subscribe_springPositions = () => ($$unsubscribe_springPositions(), $$unsubscribe_springPositions = subscribe(springPositions, ($$value) => $$invalidate(29, $springPositions = $$value)), springPositions);
   $$self.$$.on_destroy.push(() => $$unsubscribe_springPositions());
   let { slider = void 0 } = $$props;
-  let { range = false } = $$props;
+  let { range: range2 = false } = $$props;
   let { pushy = false } = $$props;
   let { min = 0 } = $$props;
   let { max = 100 } = $$props;
@@ -2648,9 +2273,9 @@ function instance($$self, $$props, $$invalidate) {
     return isHandle || isChild;
   }
   function trimRange(values2) {
-    if (range === "min" || range === "max") {
+    if (range2 === "min" || range2 === "max") {
       return values2.slice(0, 1);
-    } else if (range) {
+    } else if (range2) {
       return values2.slice(0, 2);
     } else {
       return values2;
@@ -2675,7 +2300,7 @@ function instance($$self, $$props, $$invalidate) {
     }
     handleVal = (max - min) / 100 * handlePercent + min;
     let closest;
-    if (range === true && values[0] === values[1]) {
+    if (range2 === true && values[0] === values[1]) {
       if (handleVal > values[1]) {
         return 1;
       } else {
@@ -2708,7 +2333,7 @@ function instance($$self, $$props, $$invalidate) {
     if (typeof index2 === "undefined") {
       index2 = activeHandle;
     }
-    if (range) {
+    if (range2) {
       if (index2 === 0 && value > values[1]) {
         if (pushy) {
           $$invalidate(0, values[1] = value, values);
@@ -2733,16 +2358,16 @@ function instance($$self, $$props, $$invalidate) {
     return value;
   }
   function rangeStart(values2) {
-    if (range === "min") {
+    if (range2 === "min") {
       return 0;
     } else {
       return values2[0];
     }
   }
   function rangeEnd(values2) {
-    if (range === "max") {
+    if (range2 === "max") {
       return 0;
-    } else if (range === "min") {
+    } else if (range2 === "min") {
       return 100 - values2[0];
     } else {
       return 100 - values2[1];
@@ -2891,7 +2516,7 @@ function instance($$self, $$props, $$invalidate) {
     if ("slider" in $$props2)
       $$invalidate(1, slider = $$props2.slider);
     if ("range" in $$props2)
-      $$invalidate(2, range = $$props2.range);
+      $$invalidate(2, range2 = $$props2.range);
     if ("pushy" in $$props2)
       $$invalidate(44, pushy = $$props2.pushy);
     if ("min" in $$props2)
@@ -2998,7 +2623,7 @@ function instance($$self, $$props, $$invalidate) {
   return [
     values,
     slider,
-    range,
+    range2,
     min,
     max,
     step,
@@ -3052,7 +2677,7 @@ function instance($$self, $$props, $$invalidate) {
 class RangeSlider extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance, create_fragment, safe_not_equal, {
+    init(this, options, instance$1, create_fragment$1, safe_not_equal, {
       slider: 1,
       range: 2,
       pushy: 44,
@@ -3081,5 +2706,632 @@ class RangeSlider extends SvelteComponent {
     }, null, [-1, -1, -1]);
   }
 }
-export { PointerTracker, RangeSlider, SvelteComponent, action_destroyer, add_flush_callback, afterUpdate, append_hydration, assign, attr, bind, binding_callbacks, check_outros, children, claim_component, claim_element, claim_space, claim_text, create_component, create_slot, destroy_component, destroy_each, detach, element, empty, get_all_dirty_from_scope, get_slot_changes, get_spread_object, get_spread_update, group_outros, init, insert_hydration, listen, mount_component, noop$1 as noop, onMount, run_all, safe_not_equal, setContext, set_data, set_style, space, text, tick, transition_in, transition_out, update_slot_base, writable };
-//# sourceMappingURL=vendor-284fb475.js.map
+var index_svelte_svelte_type_style_lang = "";
+function get_each_context(ctx, list, i) {
+  const child_ctx = ctx.slice();
+  child_ctx[12] = list[i];
+  child_ctx[14] = i;
+  return child_ctx;
+}
+function get_each_context_1(ctx, list, i) {
+  const child_ctx = ctx.slice();
+  child_ctx[15] = list[i];
+  child_ctx[17] = i;
+  return child_ctx;
+}
+function create_if_block_1(ctx) {
+  var _a;
+  let div;
+  let rangeslider;
+  let updating_values;
+  let current;
+  function rangeslider_values_binding(value) {
+    ctx[8](value);
+  }
+  let rangeslider_props = {
+    pips: true,
+    min: 0.5,
+    step: 0.5,
+    max: ((_a = ctx[4]) == null ? void 0 : _a.max) || 20,
+    float: true
+  };
+  if (ctx[0] !== void 0) {
+    rangeslider_props.values = ctx[0];
+  }
+  rangeslider = new RangeSlider({ props: rangeslider_props });
+  binding_callbacks.push(() => bind(rangeslider, "values", rangeslider_values_binding));
+  return {
+    c() {
+      div = element("div");
+      create_component(rangeslider.$$.fragment);
+    },
+    l(nodes) {
+      div = claim_element(nodes, "DIV", {});
+      var div_nodes = children(div);
+      claim_component(rangeslider.$$.fragment, div_nodes);
+      div_nodes.forEach(detach);
+    },
+    m(target, anchor) {
+      insert_hydration(target, div, anchor);
+      mount_component(rangeslider, div, null);
+      current = true;
+    },
+    p(ctx2, dirty) {
+      var _a2;
+      const rangeslider_changes = {};
+      if (dirty & 16)
+        rangeslider_changes.max = ((_a2 = ctx2[4]) == null ? void 0 : _a2.max) || 20;
+      if (!updating_values && dirty & 1) {
+        updating_values = true;
+        rangeslider_changes.values = ctx2[0];
+        add_flush_callback(() => updating_values = false);
+      }
+      rangeslider.$set(rangeslider_changes);
+    },
+    i(local) {
+      if (current)
+        return;
+      transition_in(rangeslider.$$.fragment, local);
+      current = true;
+    },
+    o(local) {
+      transition_out(rangeslider.$$.fragment, local);
+      current = false;
+    },
+    d(detaching) {
+      if (detaching)
+        detach(div);
+      destroy_component(rangeslider);
+    }
+  };
+}
+function create_if_block(ctx) {
+  let div;
+  let current;
+  let each_value = ctx[7];
+  let each_blocks = [];
+  for (let i = 0; i < each_value.length; i += 1) {
+    each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+  }
+  const out = (i) => transition_out(each_blocks[i], 1, 1, () => {
+    each_blocks[i] = null;
+  });
+  return {
+    c() {
+      div = element("div");
+      for (let i = 0; i < each_blocks.length; i += 1) {
+        each_blocks[i].c();
+      }
+      this.h();
+    },
+    l(nodes) {
+      div = claim_element(nodes, "DIV", { class: true });
+      var div_nodes = children(div);
+      for (let i = 0; i < each_blocks.length; i += 1) {
+        each_blocks[i].l(div_nodes);
+      }
+      div_nodes.forEach(detach);
+      this.h();
+    },
+    h() {
+      attr(div, "class", "grid");
+    },
+    m(target, anchor) {
+      insert_hydration(target, div, anchor);
+      for (let i = 0; i < each_blocks.length; i += 1) {
+        each_blocks[i].m(div, null);
+      }
+      current = true;
+    },
+    p(ctx2, dirty) {
+      if (dirty & 164) {
+        each_value = ctx2[7];
+        let i;
+        for (i = 0; i < each_value.length; i += 1) {
+          const child_ctx = get_each_context(ctx2, each_value, i);
+          if (each_blocks[i]) {
+            each_blocks[i].p(child_ctx, dirty);
+            transition_in(each_blocks[i], 1);
+          } else {
+            each_blocks[i] = create_each_block(child_ctx);
+            each_blocks[i].c();
+            transition_in(each_blocks[i], 1);
+            each_blocks[i].m(div, null);
+          }
+        }
+        group_outros();
+        for (i = each_value.length; i < each_blocks.length; i += 1) {
+          out(i);
+        }
+        check_outros();
+      }
+    },
+    i(local) {
+      if (current)
+        return;
+      for (let i = 0; i < each_value.length; i += 1) {
+        transition_in(each_blocks[i]);
+      }
+      current = true;
+    },
+    o(local) {
+      each_blocks = each_blocks.filter(Boolean);
+      for (let i = 0; i < each_blocks.length; i += 1) {
+        transition_out(each_blocks[i]);
+      }
+      current = false;
+    },
+    d(detaching) {
+      if (detaching)
+        detach(div);
+      destroy_each(each_blocks, detaching);
+    }
+  };
+}
+function create_each_block_1(ctx) {
+  let spot;
+  let current;
+  spot = new Spot({
+    props: {
+      left: ctx[5] + ctx[14] * ctx[2].offsetWidth / count,
+      top: ctx[5] + ctx[17] * ctx[2].offsetWidth / count
+    }
+  });
+  return {
+    c() {
+      create_component(spot.$$.fragment);
+    },
+    l(nodes) {
+      claim_component(spot.$$.fragment, nodes);
+    },
+    m(target, anchor) {
+      mount_component(spot, target, anchor);
+      current = true;
+    },
+    p(ctx2, dirty) {
+      const spot_changes = {};
+      if (dirty & 4)
+        spot_changes.left = ctx2[5] + ctx2[14] * ctx2[2].offsetWidth / count;
+      if (dirty & 4)
+        spot_changes.top = ctx2[5] + ctx2[17] * ctx2[2].offsetWidth / count;
+      spot.$set(spot_changes);
+    },
+    i(local) {
+      if (current)
+        return;
+      transition_in(spot.$$.fragment, local);
+      current = true;
+    },
+    o(local) {
+      transition_out(spot.$$.fragment, local);
+      current = false;
+    },
+    d(detaching) {
+      destroy_component(spot, detaching);
+    }
+  };
+}
+function create_each_block(ctx) {
+  let div;
+  let t;
+  let current;
+  let each_value_1 = ctx[12];
+  let each_blocks = [];
+  for (let i = 0; i < each_value_1.length; i += 1) {
+    each_blocks[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
+  }
+  const out = (i) => transition_out(each_blocks[i], 1, 1, () => {
+    each_blocks[i] = null;
+  });
+  return {
+    c() {
+      div = element("div");
+      for (let i = 0; i < each_blocks.length; i += 1) {
+        each_blocks[i].c();
+      }
+      t = space();
+      this.h();
+    },
+    l(nodes) {
+      div = claim_element(nodes, "DIV", { class: true });
+      var div_nodes = children(div);
+      for (let i = 0; i < each_blocks.length; i += 1) {
+        each_blocks[i].l(div_nodes);
+      }
+      t = claim_space(div_nodes);
+      div_nodes.forEach(detach);
+      this.h();
+    },
+    h() {
+      attr(div, "class", "col");
+    },
+    m(target, anchor) {
+      insert_hydration(target, div, anchor);
+      for (let i = 0; i < each_blocks.length; i += 1) {
+        each_blocks[i].m(div, null);
+      }
+      append_hydration(div, t);
+      current = true;
+    },
+    p(ctx2, dirty) {
+      if (dirty & 36) {
+        each_value_1 = ctx2[12];
+        let i;
+        for (i = 0; i < each_value_1.length; i += 1) {
+          const child_ctx = get_each_context_1(ctx2, each_value_1, i);
+          if (each_blocks[i]) {
+            each_blocks[i].p(child_ctx, dirty);
+            transition_in(each_blocks[i], 1);
+          } else {
+            each_blocks[i] = create_each_block_1(child_ctx);
+            each_blocks[i].c();
+            transition_in(each_blocks[i], 1);
+            each_blocks[i].m(div, t);
+          }
+        }
+        group_outros();
+        for (i = each_value_1.length; i < each_blocks.length; i += 1) {
+          out(i);
+        }
+        check_outros();
+      }
+    },
+    i(local) {
+      if (current)
+        return;
+      for (let i = 0; i < each_value_1.length; i += 1) {
+        transition_in(each_blocks[i]);
+      }
+      current = true;
+    },
+    o(local) {
+      each_blocks = each_blocks.filter(Boolean);
+      for (let i = 0; i < each_blocks.length; i += 1) {
+        transition_out(each_blocks[i]);
+      }
+      current = false;
+    },
+    d(detaching) {
+      if (detaching)
+        detach(div);
+      destroy_each(each_blocks, detaching);
+    }
+  };
+}
+function create_fragment(ctx) {
+  let div0;
+  let h1;
+  let t0;
+  let t1;
+  let p0;
+  let t2;
+  let t3;
+  let h2;
+  let t4;
+  let t5;
+  let p1;
+  let t6;
+  let t7;
+  let div5;
+  let div3;
+  let div1;
+  let t8;
+  let t9_value = ctx[4].value.toFixed(5) + "";
+  let t9;
+  let t10;
+  let t11_value = JSON.stringify(ctx[0]) + "";
+  let t11;
+  let t12;
+  let t13;
+  let div2;
+  let t14;
+  let t15;
+  let t16;
+  let div4;
+  let current;
+  let mounted;
+  let dispose;
+  let if_block0 = ctx[0] && create_if_block_1(ctx);
+  let if_block1 = ctx[2] && create_if_block(ctx);
+  return {
+    c() {
+      div0 = element("div");
+      h1 = element("h1");
+      t0 = text("Pan and Zoom");
+      t1 = space();
+      p0 = element("p");
+      t2 = text("Try out the mouse wheel scroll in the red box below");
+      t3 = space();
+      h2 = element("h2");
+      t4 = text("Inside");
+      t5 = space();
+      p1 = element("p");
+      t6 = text("Inside the red box should pan and zoom");
+      t7 = space();
+      div5 = element("div");
+      div3 = element("div");
+      div1 = element("div");
+      t8 = text("Zoom Level: ");
+      t9 = text(t9_value);
+      t10 = text(" || ");
+      t11 = text(t11_value);
+      t12 = space();
+      if (if_block0)
+        if_block0.c();
+      t13 = space();
+      div2 = element("div");
+      t14 = text("Style: ");
+      t15 = text(ctx[3]);
+      t16 = space();
+      div4 = element("div");
+      if (if_block1)
+        if_block1.c();
+      this.h();
+    },
+    l(nodes) {
+      div0 = claim_element(nodes, "DIV", {});
+      var div0_nodes = children(div0);
+      h1 = claim_element(div0_nodes, "H1", {});
+      var h1_nodes = children(h1);
+      t0 = claim_text(h1_nodes, "Pan and Zoom");
+      h1_nodes.forEach(detach);
+      t1 = claim_space(div0_nodes);
+      p0 = claim_element(div0_nodes, "P", {});
+      var p0_nodes = children(p0);
+      t2 = claim_text(p0_nodes, "Try out the mouse wheel scroll in the red box below");
+      p0_nodes.forEach(detach);
+      t3 = claim_space(div0_nodes);
+      h2 = claim_element(div0_nodes, "H2", {});
+      var h2_nodes = children(h2);
+      t4 = claim_text(h2_nodes, "Inside");
+      h2_nodes.forEach(detach);
+      t5 = claim_space(div0_nodes);
+      p1 = claim_element(div0_nodes, "P", {});
+      var p1_nodes = children(p1);
+      t6 = claim_text(p1_nodes, "Inside the red box should pan and zoom");
+      p1_nodes.forEach(detach);
+      div0_nodes.forEach(detach);
+      t7 = claim_space(nodes);
+      div5 = claim_element(nodes, "DIV", { class: true });
+      var div5_nodes = children(div5);
+      div3 = claim_element(div5_nodes, "DIV", { class: true });
+      var div3_nodes = children(div3);
+      div1 = claim_element(div3_nodes, "DIV", {});
+      var div1_nodes = children(div1);
+      t8 = claim_text(div1_nodes, "Zoom Level: ");
+      t9 = claim_text(div1_nodes, t9_value);
+      t10 = claim_text(div1_nodes, " || ");
+      t11 = claim_text(div1_nodes, t11_value);
+      t12 = claim_space(div1_nodes);
+      if (if_block0)
+        if_block0.l(div1_nodes);
+      div1_nodes.forEach(detach);
+      t13 = claim_space(div3_nodes);
+      div2 = claim_element(div3_nodes, "DIV", {});
+      var div2_nodes = children(div2);
+      t14 = claim_text(div2_nodes, "Style: ");
+      t15 = claim_text(div2_nodes, ctx[3]);
+      div2_nodes.forEach(detach);
+      div3_nodes.forEach(detach);
+      t16 = claim_space(div5_nodes);
+      div4 = claim_element(div5_nodes, "DIV", { class: true });
+      var div4_nodes = children(div4);
+      if (if_block1)
+        if_block1.l(div4_nodes);
+      div4_nodes.forEach(detach);
+      div5_nodes.forEach(detach);
+      this.h();
+    },
+    h() {
+      attr(div3, "class", "menu svelte-1teec0a");
+      attr(div4, "class", "zoomable flexbox svelte-1teec0a");
+      attr(div5, "class", "container svelte-1teec0a");
+    },
+    m(target, anchor) {
+      insert_hydration(target, div0, anchor);
+      append_hydration(div0, h1);
+      append_hydration(h1, t0);
+      append_hydration(div0, t1);
+      append_hydration(div0, p0);
+      append_hydration(p0, t2);
+      append_hydration(div0, t3);
+      append_hydration(div0, h2);
+      append_hydration(h2, t4);
+      append_hydration(div0, t5);
+      append_hydration(div0, p1);
+      append_hydration(p1, t6);
+      insert_hydration(target, t7, anchor);
+      insert_hydration(target, div5, anchor);
+      append_hydration(div5, div3);
+      append_hydration(div3, div1);
+      append_hydration(div1, t8);
+      append_hydration(div1, t9);
+      append_hydration(div1, t10);
+      append_hydration(div1, t11);
+      append_hydration(div1, t12);
+      if (if_block0)
+        if_block0.m(div1, null);
+      append_hydration(div3, t13);
+      append_hydration(div3, div2);
+      append_hydration(div2, t14);
+      append_hydration(div2, t15);
+      append_hydration(div5, t16);
+      append_hydration(div5, div4);
+      if (if_block1)
+        if_block1.m(div4, null);
+      ctx[9](div4);
+      ctx[10](div5);
+      current = true;
+      if (!mounted) {
+        dispose = [
+          action_destroyer(pzoom.call(null, div4)),
+          listen(div4, "zoomed", ctx[6])
+        ];
+        mounted = true;
+      }
+    },
+    p(ctx2, [dirty]) {
+      if ((!current || dirty & 16) && t9_value !== (t9_value = ctx2[4].value.toFixed(5) + ""))
+        set_data(t9, t9_value);
+      if ((!current || dirty & 1) && t11_value !== (t11_value = JSON.stringify(ctx2[0]) + ""))
+        set_data(t11, t11_value);
+      if (ctx2[0]) {
+        if (if_block0) {
+          if_block0.p(ctx2, dirty);
+          if (dirty & 1) {
+            transition_in(if_block0, 1);
+          }
+        } else {
+          if_block0 = create_if_block_1(ctx2);
+          if_block0.c();
+          transition_in(if_block0, 1);
+          if_block0.m(div1, null);
+        }
+      } else if (if_block0) {
+        group_outros();
+        transition_out(if_block0, 1, 1, () => {
+          if_block0 = null;
+        });
+        check_outros();
+      }
+      if (!current || dirty & 8)
+        set_data(t15, ctx2[3]);
+      if (ctx2[2]) {
+        if (if_block1) {
+          if_block1.p(ctx2, dirty);
+          if (dirty & 4) {
+            transition_in(if_block1, 1);
+          }
+        } else {
+          if_block1 = create_if_block(ctx2);
+          if_block1.c();
+          transition_in(if_block1, 1);
+          if_block1.m(div4, null);
+        }
+      } else if (if_block1) {
+        group_outros();
+        transition_out(if_block1, 1, 1, () => {
+          if_block1 = null;
+        });
+        check_outros();
+      }
+    },
+    i(local) {
+      if (current)
+        return;
+      transition_in(if_block0);
+      transition_in(if_block1);
+      current = true;
+    },
+    o(local) {
+      transition_out(if_block0);
+      transition_out(if_block1);
+      current = false;
+    },
+    d(detaching) {
+      if (detaching)
+        detach(div0);
+      if (detaching)
+        detach(t7);
+      if (detaching)
+        detach(div5);
+      if (if_block0)
+        if_block0.d();
+      if (if_block1)
+        if_block1.d();
+      ctx[9](null);
+      ctx[10](null);
+      mounted = false;
+      run_all(dispose);
+    }
+  };
+}
+let count = 10;
+function instance($$self, $$props, $$invalidate) {
+  let zoomable, container;
+  let style = "";
+  let scale = { value: 1 };
+  let min = count;
+  let manualZoom = [1];
+  function handleZoom(e) {
+    console.log("Zoomed.", { detail: e.detail });
+    $$invalidate(4, scale = e.detail.scale);
+    $$invalidate(3, style = zoomable.style.transform);
+  }
+  const grid = Array.from({ length: count }, (_, i) => Array.from({ length: count }, (_2, j) => ({ id: i * count + j })));
+  function setZoom(val) {
+    console.log("Zoom to ", val, zoomable == null ? void 0 : zoomable.style["transform"]);
+    if (!zoomable)
+      return;
+    if (!(zoomable == null ? void 0 : zoomable.style)) {
+      console.log("Setting Zoom to scale only");
+      $$invalidate(1, zoomable.style["transform"] = `scale(${val})`, zoomable);
+      return;
+    }
+    let m;
+    let s = "";
+    const re = /(\w+)\(([^)]*)\)/g;
+    while (m = re.exec(zoomable == null ? void 0 : zoomable.style["transform"])) {
+      console.log({ m });
+      if (m[1] == "matrix") {
+        let piece = m[2].split(", ");
+        console.log({ piece });
+        s = `translate(${piece[4]}px, ${piece[5]}px) scale(${val})`;
+        console.log("matrixed", { s });
+        $$invalidate(1, zoomable.style["transform"] = s, zoomable);
+        return;
+      } else if (m[1] == "scale") {
+        s += ` scale(${val})`;
+      } else {
+        s += m[0];
+      }
+    }
+    console.log({ s });
+    $$invalidate(1, zoomable.style["transform"] = s, zoomable);
+  }
+  function rangeslider_values_binding(value) {
+    manualZoom = value;
+    $$invalidate(0, manualZoom);
+  }
+  function div4_binding($$value) {
+    binding_callbacks[$$value ? "unshift" : "push"](() => {
+      zoomable = $$value;
+      $$invalidate(1, zoomable);
+    });
+  }
+  function div5_binding($$value) {
+    binding_callbacks[$$value ? "unshift" : "push"](() => {
+      container = $$value;
+      $$invalidate(2, container);
+    });
+  }
+  $$self.$$.update = () => {
+    if ($$self.$$.dirty & 1) {
+      if (manualZoom) {
+        console.log({ manualZoom });
+        setZoom(manualZoom);
+      }
+    }
+  };
+  return [
+    manualZoom,
+    zoomable,
+    container,
+    style,
+    scale,
+    min,
+    handleZoom,
+    grid,
+    rangeslider_values_binding,
+    div4_binding,
+    div5_binding
+  ];
+}
+class Routes extends SvelteComponent {
+  constructor(options) {
+    super();
+    init(this, options, instance, create_fragment, safe_not_equal, {});
+  }
+}
+export { Routes as default };
+//# sourceMappingURL=index.svelte-698267e4.js.map
