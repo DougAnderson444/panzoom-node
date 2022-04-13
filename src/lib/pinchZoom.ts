@@ -78,9 +78,10 @@ const MIN_SCALE = 0.01;
 
 export default class PinchZoom {
 	// The element that we'll transform.
+	private _node: HTMLElement;
 	// Ideally this would be shadow DOM, but we don't have the browser
 	// support yet.
-	private _parentEl?: Element;
+	private _parentEl?: HTMLElement;
 	// Current transform.
 	private _transform: DOMMatrix = createMatrix();
 
@@ -91,19 +92,18 @@ export default class PinchZoom {
 	}
 
 	constructor(node: HTMLElement) {
-		this.node = node;
-		this._parentEl = this.node.parentElement || document.body;
+		this._node = node;
+		this._parentEl = this._node.parentElement || document.body;
 
 		// Watch for children changes.
 		// Note this won't fire for initial contents,
 		// so _stageElChange is also called in connectedCallback.
-		new MutationObserver(() => this._stageElChange()).observe(this.node, { childList: true });
+		new MutationObserver(() => this._stageElChange()).observe(this._node, { childList: true });
 
-		// Watch for pointers
+		// Watch for pointers (nodes[i] as HTMLElement)
 		this._pointerTracker = new PointerTracker(this._parentEl, {
 			eventListenerOptions: { capture: true }, // catch the event before it goes to child in the DOM tree
 			start: (pointer, event) => {
-				console.log('PanZoom Start', { pointer }, this._pointerTracker.currentPointers.length);
 				// We only want to track 2 pointers at most
 				// there already exists 2 pointers, and now this would have been the 3rd pointer so let's stop here
 				if (this._pointerTracker.currentPointers.length === 2 || !this._parentEl) return false;
@@ -118,27 +118,32 @@ export default class PinchZoom {
 					return true;
 				}
 
-				if (
-					this._pointerTracker.currentPointers.length === 0 &&
-					(event.target == this._parentEl || event.target == node)
-				) {
+				if (this._pointerTracker.currentPointers.length === 0) {
 					// if length == 0, then this is the first pointer tracked
 					// it's for panning, but only on the parent or this node
 					// so event.target has to be on this node or it's parent to pan everybody
+
+					// track this single pointer in case a second one gets added
+					// but don't block it's use by children, yet
 					return true;
 				}
 				// else, the pointer event must have happened on a child node, where pan doesn't apply
 			},
 			move: (previousPointers, changedPointers, event) => {
+				// console.log(`PanZoom MOVE currentPointers: ${this._pointerTracker.currentPointers.length}`);
+
+				// tracking purposes only, no action
+				if (this._pointerTracker.currentPointers.length === 0) return
+
+				// If it's a single pointer in a child, ignore it
+				if (this._pointerTracker.currentPointers.length === 1 && !(event.target == this._parentEl || event.target == node)) return
+
+				// pan if single pointer on parent container or target node
+				// zoom if double pointer anywhere
 				event.stopPropagation(); // continue exclusive rights over the pointer from DOM tree
 				this._onPointerMove(previousPointers, this._pointerTracker.currentPointers);
 			},
 			end: (pointer, event, cancelled) => {
-				console.log(
-					'PanZoom End',
-					{ pointer, event, cancelled },
-					this._pointerTracker.currentPointers.length
-				);
 			}
 		});
 
@@ -154,7 +159,7 @@ export default class PinchZoom {
 	}
 
 	get minScale(): number {
-		const attrValue = this.node.getAttribute(minScaleAttr);
+		const attrValue = this._node.getAttribute(minScaleAttr);
 		if (!attrValue) return MIN_SCALE;
 
 		const value = parseFloat(attrValue);
@@ -164,7 +169,7 @@ export default class PinchZoom {
 	}
 
 	set minScale(value: number) {
-		this.node.setAttribute(minScaleAttr, String(value));
+		this._node.setAttribute(minScaleAttr, String(value));
 	}
 
 	connectedCallback() {
@@ -191,7 +196,7 @@ export default class PinchZoom {
 
 		const { relativeTo = 'content', allowChangeEvent = false } = opts;
 
-		const relativeToEl = relativeTo === 'content' ? this._parentEl : this.node;
+		const relativeToEl = relativeTo === 'content' ? this._parentEl : this._node;
 
 		// No content element? Fall back to just setting scale
 		if (!relativeToEl || !this._parentEl) {
@@ -236,7 +241,7 @@ export default class PinchZoom {
 		}
 
 		// Get current layout
-		const thisBounds = this.node.getBoundingClientRect();
+		const thisBounds = this._node.getBoundingClientRect();
 		const parentElBounds = this._parentEl.getBoundingClientRect();
 
 		// Not displayed. May be disconnected or display:none.
@@ -296,15 +301,15 @@ export default class PinchZoom {
 		this._transform.f = y;
 		this._transform.d = this._transform.a = scale;
 
-		// this.node.style.setProperty('--x', this.x + 'px');
-		// this.node.style.setProperty('--y', this.y + 'px');
-		// this.node.style.setProperty('--scale', this.scale + '');
+		// this._node.style.setProperty('--x', this.x + 'px');
+		// this._node.style.setProperty('--y', this.y + 'px');
+		// this._node.style.setProperty('--scale', this.scale + '');
 
-		this.node.style.transform = `translate(${x}px,${y}px) scale(${scale})`;
+		this._node.style.transform = `translate(${x}px,${y}px) scale(${scale})`;
 
 		if (allowChangeEvent) {
 			const event = new Event('change', { bubbles: true });
-			this.node.dispatchEvent(event);
+			this._node.dispatchEvent(event);
 		}
 	}
 
@@ -315,7 +320,7 @@ export default class PinchZoom {
 	 * that's the element we pan/scale.
 	 */
 	private _stageElChange() {
-		this._parentEl = this.node.parentElement || document.body;
+		this._parentEl = this._node.parentElement || document.body;
 
 		// Do a bounds check
 		this.setTransform({ allowChangeEvent: true });
