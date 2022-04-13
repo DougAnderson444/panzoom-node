@@ -1,115 +1,219 @@
-import { SvelteComponent, init, safe_not_equal, element, claim_element, children, detach, set_style, attr, insert_hydration, noop, create_component, claim_component, mount_component, add_flush_callback, transition_in, transition_out, destroy_component, space, claim_space, append_hydration, check_outros, destroy_each, text, claim_text, action_destroyer, listen, set_data, is_function, run_all, RangeSlider, binding_callbacks, bind, group_outros } from "../chunks/vendor-4503c6b9.js";
-class Matrix {
-  constructor({ container }) {
-    this.container = container;
-    this.vtm = this.createMatrix();
-    this.x = 0;
-    this.y = 0;
-    this.captureScale = 1;
-    this.stop = false;
-  }
-  clamp(scale, in_x, in_y, ratio2) {
-    let xx = (this.container.clientWidth - ratio2.width) / 2;
-    let yy = (this.container.clientHeight - ratio2.height) / 2;
-    let limit_max_right_formula = xx * scale + ratio2.width * scale - this.container.clientWidth;
-    let same_x = Math.min(this.vtm.e * 1, 0);
-    let same_y = Math.min(this.vtm.f * 1, 0);
-    let value1 = in_x > 0 ? same_x : -(xx * scale);
-    let value2 = in_x > 0 ? same_x : -limit_max_right_formula;
-    let limit_x_axis = this.vtm.e;
-    limit_x_axis = Math.max(value2, this.vtm.e);
-    limit_x_axis = Math.min(value1, limit_x_axis);
-    let limit_max_bottom_formula = yy * scale + ratio2.height * scale - this.container.clientHeight;
-    let limit_max_top = in_y > 0 ? same_y : -(yy * scale);
-    let limit_max_bottom = in_y > 0 ? same_y : -limit_max_bottom_formula;
-    let limit_y_axis = this.vtm.f;
-    limit_y_axis = Math.min(limit_max_top, limit_y_axis);
-    limit_y_axis = Math.max(limit_y_axis, limit_max_bottom);
-    this.vtm = this.createMatrix().translate(limit_x_axis, limit_y_axis).scale(Math.max(this.vtm.a, 1));
-  }
-  createMatrix() {
-    return new DOMMatrix();
-  }
-  move(x, y, in_x, in_y, ratio2) {
-    this.vtm = this.createMatrix().translate(this.x - x, this.y - y).scale(this.vtm.a);
-    return this.vtm;
-  }
-  scale(xFactor, yFactor, origin, in_x, in_y, ratio2, max, value, dir) {
-    this.vtm = this.createMatrix().translate(origin.x, origin.y).scale(xFactor, yFactor).translate(-origin.x, -origin.y).multiply(this.vtm);
-    Math.min(Math.max(1, this.vtm.a), max);
-    return this.vtm;
-  }
+import { PointerTracker, SvelteComponent, init, safe_not_equal, element, claim_element, children, detach, set_style, attr, insert_hydration, noop, create_component, claim_component, mount_component, add_flush_callback, transition_in, transition_out, destroy_component, space, claim_space, append_hydration, check_outros, destroy_each, text, claim_text, action_destroyer, listen, set_data, run_all, RangeSlider, binding_callbacks, bind, group_outros } from "../chunks/vendor-284fb475.js";
+var styles = "";
+const minScaleAttr = "min-scale";
+function getDistance(a, b) {
+  if (!b)
+    return 0;
+  return Math.sqrt((b.clientX - a.clientX) ** 2 + (b.clientY - a.clientY) ** 2);
 }
-class MultiTouchVelocity {
-  constructor() {
-    this.touchA = {
-      clientX: 0,
-      clientY: 0,
-      t: 0,
-      velocity: 1
-    };
-    this.touchB = {
-      clientX: 0,
-      clientY: 0,
-      t: 0,
-      velocity: 1
-    };
-  }
-  down(touchA, touchB) {
-    this.touchA = { clientX: touchA.clientX, clientY: touchA.clientY, t: Date.now(), velocity: 0 };
-    this.touchB = { clientX: touchB.clientX, clientY: touchB.clientY, t: Date.now(), veloctiy: 0 };
-  }
-  calc(touch, ins) {
-    var new_x = touch.clientX, new_y = touch.clientY, new_t = Date.now();
-    var x_dist = new_x - ins.clientX, y_dist = new_y - ins.clientY, interval = new_t - ins.t;
-    var velocity2 = Math.sqrt(x_dist * x_dist + y_dist * y_dist) / interval;
-    ins.velocity = velocity2;
-    ins.clientX = new_x;
-    ins.clientY = new_y;
-    ins.t = new_t;
-  }
-  getVelocity(touchA, touchB) {
-    this.calc(touchA, this.touchA);
-    this.calc(touchB, this.touchB);
-    return this.touchA.velocity + this.touchB.velocity;
-  }
-}
-function calculateAspectRatioFit(srcWidth, srcHeight, maxWidth, maxHeight) {
-  var ratio2 = Math.min(maxWidth / srcWidth, maxHeight / srcHeight);
-  return { width: srcWidth * ratio2, height: srcHeight * ratio2, ratio: ratio2 };
-}
-function getDistance(touchA, touchB) {
-  return Math.hypot(touchA.pageX - touchB.pageX, touchA.pageY - touchB.pageY);
-}
-let touchScreen = false;
-let xY = {
-  initX: 0,
-  initY: 0,
-  newX: 0,
-  newY: 0
-};
-let ratio;
-let matrix;
-let velocity = new MultiTouchVelocity();
-let lastTap = {
-  time: 0,
-  x: 0,
-  y: 0
-};
-const panzoom = (node, params = {}) => {
-  var _a;
-  let scale = {
-    scaling: false,
-    x1: 0,
-    x2: 0,
-    y1: 0,
-    y2: 0,
-    lastHypo: 0,
-    originX: 0,
-    originY: 0,
-    value: ((_a = params == null ? void 0 : params.scale) == null ? void 0 : _a.value) || 1,
-    max: 20
+function getMidpoint(a, b) {
+  if (!b)
+    return a;
+  return {
+    clientX: (a.clientX + b.clientX) / 2,
+    clientY: (a.clientY + b.clientY) / 2
   };
+}
+function getAbsoluteValue(value, max) {
+  if (typeof value === "number")
+    return value;
+  if (value.trimRight().endsWith("%")) {
+    return max * parseFloat(value) / 100;
+  }
+  return parseFloat(value);
+}
+function createMatrix() {
+  return new DOMMatrix();
+}
+function createPoint() {
+  return new DOMPoint();
+}
+const MIN_SCALE = 0.01;
+class PinchZoom {
+  constructor(node) {
+    this._transform = createMatrix();
+    this.node = node;
+    this._parentEl = this.node.parentElement || document.body;
+    new MutationObserver(() => this._stageElChange()).observe(this.node, { childList: true });
+    const pointerTracker = new PointerTracker(this._parentEl, {
+      eventListenerOptions: { capture: true },
+      start: (pointer, event2) => {
+        console.log("PanZoom Start", { pointer }, pointerTracker.currentPointers.length);
+        if (pointerTracker.currentPointers.length === 2 || !this._parentEl) {
+          return false;
+        } else {
+          event2.preventDefault();
+          event2.stopPropagation();
+          return true;
+        }
+      },
+      move: (previousPointers) => {
+        event.stopPropagation();
+        this._onPointerMove(previousPointers, pointerTracker.currentPointers);
+      }
+    });
+    this._parentEl.addEventListener("wheel", (event2) => this._onWheel(event2));
+  }
+  static get observedAttributes() {
+    return [minScaleAttr];
+  }
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === minScaleAttr) {
+      if (this.scale < this.minScale) {
+        this.setTransform({ scale: this.minScale });
+      }
+    }
+  }
+  get minScale() {
+    const attrValue = this.node.getAttribute(minScaleAttr);
+    if (!attrValue)
+      return MIN_SCALE;
+    const value = parseFloat(attrValue);
+    if (Number.isFinite(value))
+      return Math.max(MIN_SCALE, value);
+    return MIN_SCALE;
+  }
+  set minScale(value) {
+    this.node.setAttribute(minScaleAttr, String(value));
+  }
+  connectedCallback() {
+    this._stageElChange();
+  }
+  get x() {
+    return this._transform.e;
+  }
+  get y() {
+    return this._transform.f;
+  }
+  get scale() {
+    return this._transform.a;
+  }
+  scaleTo(scale, opts = {}) {
+    let { originX = 0, originY = 0 } = opts;
+    const { relativeTo = "content", allowChangeEvent = false } = opts;
+    const relativeToEl = relativeTo === "content" ? this._parentEl : this.node;
+    if (!relativeToEl || !this._parentEl) {
+      this.setTransform({ scale, allowChangeEvent });
+      return;
+    }
+    const rect = relativeToEl.getBoundingClientRect();
+    originX = getAbsoluteValue(originX, rect.width);
+    originY = getAbsoluteValue(originY, rect.height);
+    if (relativeTo === "content") {
+      originX += this.x;
+      originY += this.y;
+    } else {
+      const currentRect = this._parentEl.getBoundingClientRect();
+      originX -= currentRect.left;
+      originY -= currentRect.top;
+    }
+    this._applyChange({
+      allowChangeEvent,
+      originX,
+      originY,
+      scaleDiff: scale / this.scale
+    });
+  }
+  setTransform(opts = {}) {
+    const { scale = this.scale, allowChangeEvent = false } = opts;
+    let { x = this.x, y = this.y } = opts;
+    if (!this._parentEl) {
+      this._updateTransform(scale, x, y, allowChangeEvent);
+      return;
+    }
+    const thisBounds = this.node.getBoundingClientRect();
+    const parentElBounds = this._parentEl.getBoundingClientRect();
+    if (!thisBounds.width || !thisBounds.height) {
+      this._updateTransform(scale, x, y, allowChangeEvent);
+      return;
+    }
+    let topLeft = createPoint();
+    topLeft.x = parentElBounds.left - thisBounds.left;
+    topLeft.y = parentElBounds.top - thisBounds.top;
+    let bottomRight = createPoint();
+    bottomRight.x = parentElBounds.width + topLeft.x;
+    bottomRight.y = parentElBounds.height + topLeft.y;
+    const matrix = createMatrix().translate(x, y).scale(scale).multiply(this._transform.inverse());
+    topLeft = topLeft.matrixTransform(matrix);
+    bottomRight = bottomRight.matrixTransform(matrix);
+    this._updateTransform(scale, x, y, allowChangeEvent);
+  }
+  _updateTransform(scale, x, y, allowChangeEvent) {
+    if (scale < this.minScale)
+      return;
+    if (scale === this.scale && x === this.x && y === this.y)
+      return;
+    this._transform.e = x;
+    this._transform.f = y;
+    this._transform.d = this._transform.a = scale;
+    this.node.style.transform = `translate(${x}px,${y}px) scale(${scale})`;
+    if (allowChangeEvent) {
+      const event2 = new Event("change", { bubbles: true });
+      this.node.dispatchEvent(event2);
+    }
+  }
+  _stageElChange() {
+    this._parentEl = this.node.parentElement || document.body;
+    this.setTransform({ allowChangeEvent: true });
+  }
+  _onWheel(event2) {
+    if (!this._parentEl)
+      return;
+    event2.preventDefault();
+    this._parentEl.getBoundingClientRect();
+    let { deltaY } = event2;
+    const { ctrlKey, deltaMode } = event2;
+    if (deltaMode === 1) {
+      deltaY *= 15;
+    }
+    const divisor = ctrlKey ? 200 : 600;
+    const scaleDiff = 1 - deltaY / divisor;
+    this._applyChange({
+      scaleDiff,
+      originX: event2.pageX - this._parentEl.offsetLeft - this._parentEl.clientWidth / 2,
+      originY: event2.pageY - this._parentEl.offsetTop - this._parentEl.clientHeight / 2,
+      allowChangeEvent: true
+    });
+  }
+  _onPointerMove(previousPointers, currentPointers) {
+    if (!this._parentEl)
+      return;
+    const currentRect = this._parentEl.getBoundingClientRect();
+    const prevMidpoint = getMidpoint(previousPointers[0], previousPointers[1]);
+    const newMidpoint = getMidpoint(currentPointers[0], currentPointers[1]);
+    const originX = prevMidpoint.clientX - currentRect.left - currentRect.width / 2;
+    const originY = prevMidpoint.clientY - currentRect.top - currentRect.height / 2;
+    const prevDistance = getDistance(previousPointers[0], previousPointers[1]);
+    const newDistance = getDistance(currentPointers[0], currentPointers[1]);
+    const scaleDiff = prevDistance ? newDistance / prevDistance : 1;
+    this._applyChange({
+      originX,
+      originY,
+      scaleDiff,
+      panX: newMidpoint.clientX - prevMidpoint.clientX,
+      panY: newMidpoint.clientY - prevMidpoint.clientY,
+      allowChangeEvent: true
+    });
+  }
+  _applyChange(opts = {}) {
+    const {
+      panX = 0,
+      panY = 0,
+      originX = 0,
+      originY = 0,
+      scaleDiff = 1,
+      allowChangeEvent = false
+    } = opts;
+    const matrix = createMatrix().translate(panX, panY).translate(originX, originY).scale(scaleDiff).translate(-originX, -originY).multiply(this._transform);
+    this.setTransform({
+      allowChangeEvent,
+      scale: matrix.a,
+      x: matrix.e,
+      y: matrix.f
+    });
+  }
+}
+const pzoom = (node, params = {}) => {
   let container = node.parentElement || document.body;
   container.style["touch-action"] = "none";
   container.style["user-select"] = "none";
@@ -118,211 +222,7 @@ const panzoom = (node, params = {}) => {
   node.style["touch-action"] = "none";
   node.style["user-select"] = "none";
   node.style["position"] = "absolute";
-  node.style["height"] = "100%";
-  node.style["width"] = "100%";
-  matrix = new Matrix({ container });
-  onLoad();
-  node.addEventListener("dragstart", onDragStart, { passive: false });
-  node.addEventListener("drag", onDragStart, { passive: false });
-  container.addEventListener("mousedown", onMouseDown, { passive: false });
-  container.addEventListener("touchstart", onTouchStart, { passive: false });
-  container.addEventListener("wheel", onWheel, { passive: false });
-  container.addEventListener("dragstart", onDragStart, { passive: false });
-  container.addEventListener("drag", onDragStart, { passive: false });
-  window.addEventListener("resize", onResize);
-  const observer = new MutationObserver((mutationsList, observer2) => {
-    for (const mutation of mutationsList) {
-      if (mutation.type === "attributes") {
-        let m;
-        const re = /(\w+)\(([^)]*)\)/g;
-        while (m = re.exec(node.style["transform"])) {
-          if (m[1] == "scale" && parseFloat(m[2]).toFixed(2) != scale.value.toFixed(2)) {
-            scale.value = m[2];
-          }
-        }
-      }
-    }
-  });
-  observer.observe(node, { attributes: true, childList: false, subtree: false });
-  function onDragStart(e) {
-    console.log("Removing drag listener");
-    return false;
-  }
-  function onLoad() {
-    const { offsetWidth, offsetHeight } = node;
-    ratio = calculateAspectRatioFit(offsetWidth, offsetHeight, container.clientWidth, container.clientHeight);
-  }
-  function onResize() {
-    onLoad();
-    fireDown(0, 0);
-    fireMove(0, 0);
-    fireUp();
-  }
-  function fireDown(x, y) {
-    xY.initX = x;
-    xY.initY = y;
-    matrix.x = matrix.vtm.e;
-    matrix.y = matrix.vtm.f;
-  }
-  function fireMove(x, y) {
-    if (scale.scaling)
-      return;
-    let in_x = (container.clientWidth - ratio.width * matrix.vtm.a) / 2;
-    let in_y = (container.clientHeight - ratio.height * matrix.vtm.a) / 2;
-    xY.newX = xY.initX - x;
-    xY.newY = xY.initY - y;
-    const mat = matrix.move(xY.newX, xY.newY, in_x, in_y, ratio);
-    node.style.transform = `matrix(${mat.a},${mat.b},${mat.c},${mat.d},${mat.e}, ${mat.f})`;
-  }
-  function fireUp() {
-    matrix.x -= xY.newX;
-    matrix.y -= xY.newY;
-    scale.scaling = false;
-    scale.lastHypo = 0;
-  }
-  function fireScale(touchA, touchB) {
-    const xTouch = [Math.min(touchA.pageX, touchB.pageX), Math.max(touchA.pageX, touchB.pageX)];
-    const yTouch = [Math.min(touchA.pageY, touchB.pageY), Math.max(touchA.pageY, touchB.pageY)];
-    const W = xTouch[1] - xTouch[0];
-    const centerX = W / 2 + xTouch[0];
-    const H = yTouch[1] - yTouch[0];
-    const centerY = H / 2 + yTouch[0];
-    scale.originX = centerX;
-    scale.originY = centerY;
-    scale.lastHypo = Math.trunc(getDistance(touchA, touchB));
-  }
-  function fireTapScale(x, y) {
-    let scaleVtm = matrix.vtm.a;
-    let scale_value = scaleVtm > 1 ? scaleVtm - 1 : scale.max / 2.5;
-    let scale_factor = scaleVtm > 1 ? -1 : 1;
-    const xFactor = 1 + scale_value * scale_factor;
-    const yFactor = xFactor;
-    let in_x = (container.clientWidth - ratio.width * Math.max(xFactor * scaleVtm, 1)) / 2;
-    let in_y = (container.clientHeight - ratio.height * Math.max(xFactor * scaleVtm, 1)) / 2;
-    const origin = {
-      x: x - container.clientWidth / 2 - container.offsetLeft,
-      y: y - container.clientHeight / 2 - container.offsetTop
-    };
-    const mat = matrix.scale(xFactor, yFactor, origin, in_x, in_y, ratio, scale.max, scale.value * xFactor, scale_factor);
-    scale.value = mat.d;
-    node.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
-    node.dispatchEvent(new CustomEvent("zoomed", {
-      detail: { scale, matrix, origin }
-    }));
-  }
-  function fireScaleMove(touchA, touchB, e) {
-    const hypo = getDistance(touchA, touchB);
-    let f = hypo / scale.lastHypo;
-    f = f >= 1 ? 1 : -1;
-    const ff = velocity.getVelocity(touchA, touchB) || 1;
-    const xFactor = 1 + 0.1 * ff * f;
-    const yFactor = xFactor;
-    let in_x = (container.clientWidth - ratio.width * matrix.vtm.a) / 2;
-    let in_y = (container.clientHeight - ratio.height * matrix.vtm.a) / 2;
-    const origin = {
-      x: scale.originX - container.clientWidth / 2 - container.offsetLeft,
-      y: scale.originY - container.clientHeight / 2 - container.offsetTop
-    };
-    const mat = matrix.scale(xFactor, yFactor, origin, in_x, in_y, ratio, scale.max, scale.value * xFactor, f);
-    scale.value = mat.d;
-    scale.lastHypo = hypo;
-    scale.scaling = true;
-    node.style.transform = `translate(${mat.e}px, ${mat.f}px) scale(${mat.a})`;
-    node.dispatchEvent(new CustomEvent("zoomed", {
-      detail: { style: node.style, scale, matrix, origin }
-    }));
-  }
-  function onWheel(e) {
-    e.preventDefault();
-    const dir = e.deltaY < 0 ? 1 : -1;
-    const xFactor = 1 + 0.1 * dir;
-    const yFactor = xFactor;
-    let in_x = (container.clientWidth - ratio.width * matrix.vtm.a) / 2;
-    let in_y = (container.clientHeight - ratio.height * matrix.vtm.a) / 2;
-    const origin = {
-      x: e.pageX - container.clientWidth / 2 - container.offsetLeft,
-      y: e.pageY - container.clientHeight / 2 - container.offsetTop
-    };
-    const mat = matrix.scale(xFactor, yFactor, origin, in_x, in_y, ratio, scale.max, scale.value * xFactor, dir);
-    scale.value = mat.d;
-    node.style.transform = `translate(${mat.e}px,${mat.f}px) scale(${mat.a})`;
-    node.dispatchEvent(new CustomEvent("zoomed", {
-      detail: { style: node.style, scale, matrix, origin }
-    }));
-  }
-  function onTouchStart(e) {
-    touchScreen = true;
-    const isMultiTouch = e.touches.length === 2;
-    const [touchA, touchB] = e.touches;
-    scale.scaling = isMultiTouch;
-    if (isMultiTouch) {
-      fireScale(touchA, touchB);
-      velocity.down(touchA, touchB);
-    } else {
-      const { pageX, pageY } = touchA;
-      var now = new Date().getTime();
-      if (now - lastTap.time < 250 && Math.hypot(lastTap.x - pageX, lastTap.y - pageY) <= 20) {
-        fireTapScale(pageX, pageY);
-      } else {
-        fireDown(pageX, pageY);
-      }
-      lastTap = {
-        time: now,
-        x: pageX,
-        y: pageY
-      };
-    }
-    node.removeEventListener("touchmove", onTouchMove);
-    node.removeEventListener("touchend", onTouchEnd);
-    node.addEventListener("touchmove", onTouchMove);
-    node.addEventListener("touchend", onTouchEnd);
-  }
-  function onTouchMove(e) {
-    if (scale.scaling) {
-      const [touchA, touchB] = e.touches;
-      fireScaleMove(touchA, touchB);
-    } else {
-      fireMove(e.touches[0].pageX, e.touches[0].pageY);
-    }
-  }
-  function onTouchEnd(e) {
-    fireUp();
-    node.removeEventListener("touchmove", onTouchMove);
-    node.removeEventListener("touchend", onTouchEnd);
-    node.removeEventListener("touchcancel", onTouchEnd);
-  }
-  function onMouseDown(e) {
-    if (container !== e.target && node !== e.target) {
-      return;
-    }
-    const { clientX, clientY } = e;
-    if (touchScreen)
-      return;
-    fireDown(clientX, clientY);
-    container.addEventListener("mousemove", onMouseMove);
-    container.addEventListener("mouseup", onMouseUp);
-  }
-  function onMouseMove({ clientX, clientY }) {
-    fireMove(clientX, clientY);
-  }
-  function onMouseUp() {
-    container.removeEventListener("mousemove", onMouseMove);
-    fireUp();
-  }
-  return {
-    update(params2) {
-      console.log("Directive updated params", { params: params2 });
-    },
-    destroy() {
-      node.removeEventListener("wheel", onWheel);
-      node.removeEventListener("mousedown", onMouseDown);
-      node.removeEventListener("touchstart", onTouchStart);
-      node.removeEventListener("dragstart", onDragStart);
-      node.addEventListener("drag", onDragStart);
-      window.removeEventListener("resize", onResize);
-      observer.disconnect();
-    }
-  };
+  new PinchZoom(node);
 };
 var Spot_svelte_svelte_type_style_lang = "";
 function create_fragment$1(ctx) {
@@ -704,7 +604,6 @@ function create_fragment(ctx) {
   let t15;
   let t16;
   let div4;
-  let panzoom_action;
   let current;
   let mounted;
   let dispose;
@@ -841,7 +740,7 @@ function create_fragment(ctx) {
       current = true;
       if (!mounted) {
         dispose = [
-          action_destroyer(panzoom_action = panzoom.call(null, div4, { scale: ctx[4] })),
+          action_destroyer(pzoom.call(null, div4)),
           listen(div4, "zoomed", ctx[6])
         ];
         mounted = true;
@@ -892,8 +791,6 @@ function create_fragment(ctx) {
         });
         check_outros();
       }
-      if (panzoom_action && is_function(panzoom_action.update) && dirty & 16)
-        panzoom_action.update.call(null, { scale: ctx2[4] });
     },
     i(local) {
       if (current)
@@ -1013,4 +910,4 @@ class Routes extends SvelteComponent {
   }
 }
 export { Routes as default };
-//# sourceMappingURL=index.svelte-1b1e9322.js.map
+//# sourceMappingURL=index.svelte-4d37f6c7.js.map

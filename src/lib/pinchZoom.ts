@@ -103,10 +103,13 @@ export default class PinchZoom {
 			start: (pointer, event) => {
 				console.log('PanZoom Start', { pointer }, pointerTracker.currentPointers.length);
 				// We only want to track 2 pointers at most
-				if (pointerTracker.currentPointers.length === 2 || !this._parentEl) return false;
-				event.preventDefault();
-				event.stopPropagation(); // if it's a 2 touch move, we want exclusive rights over the pointer
-				return true;
+				if (pointerTracker.currentPointers.length === 2 || !this._parentEl) {
+					return false;
+				} else {
+					event.preventDefault();
+					event.stopPropagation(); // if it's a 2 touch move, we want exclusive rights over the pointer
+					return true;
+				}
 			},
 			move: (previousPointers) => {
 				event.stopPropagation(); // continue exclusive rights over the pointer from DOM tree

@@ -1,4 +1,4 @@
-function noop() {
+function noop$1() {
 }
 function assign(tar, src) {
   for (const k in src)
@@ -25,7 +25,7 @@ function is_empty(obj) {
 }
 function subscribe(store, ...callbacks) {
   if (store == null) {
-    return noop;
+    return noop$1;
   }
   const unsub = store.subscribe(...callbacks);
   return unsub.unsubscribe ? () => unsub.unsubscribe() : unsub;
@@ -75,11 +75,11 @@ function get_all_dirty_from_scope($$scope) {
   return -1;
 }
 function action_destroyer(action_result) {
-  return action_result && is_function(action_result.destroy) ? action_result.destroy : noop;
+  return action_result && is_function(action_result.destroy) ? action_result.destroy : noop$1;
 }
 const is_client = typeof window !== "undefined";
 let now = is_client ? () => window.performance.now() : () => Date.now();
-let raf = is_client ? (cb) => requestAnimationFrame(cb) : noop;
+let raf = is_client ? (cb) => requestAnimationFrame(cb) : noop$1;
 const tasks = /* @__PURE__ */ new Set();
 function run_tasks(now2) {
   tasks.forEach((task) => {
@@ -555,7 +555,7 @@ function init(component, options, instance2, create_fragment2, not_equal, props,
     fragment: null,
     ctx: null,
     props,
-    update: noop,
+    update: noop$1,
     not_equal,
     bound: blank_object(),
     on_mount: [],
@@ -605,7 +605,7 @@ function init(component, options, instance2, create_fragment2, not_equal, props,
 class SvelteComponent {
   $destroy() {
     destroy_component(this, 1);
-    this.$destroy = noop;
+    this.$destroy = noop$1;
   }
   $on(type, callback) {
     const callbacks = this.$$.callbacks[type] || (this.$$.callbacks[type] = []);
@@ -625,7 +625,7 @@ class SvelteComponent {
   }
 }
 const subscriber_queue = [];
-function writable(value, start = noop) {
+function writable(value, start = noop$1) {
   let stop;
   const subscribers = /* @__PURE__ */ new Set();
   function set(new_value) {
@@ -649,11 +649,11 @@ function writable(value, start = noop) {
   function update2(fn) {
     set(fn(value));
   }
-  function subscribe2(run2, invalidate = noop) {
+  function subscribe2(run2, invalidate = noop$1) {
     const subscriber = [run2, invalidate];
     subscribers.add(subscriber);
     if (subscribers.size === 1) {
-      stop = start(set) || noop;
+      stop = start(set) || noop$1;
     }
     run2(value);
     return () => {
@@ -665,6 +665,154 @@ function writable(value, start = noop) {
     };
   }
   return { set, update: update2, subscribe: subscribe2 };
+}
+class Pointer {
+  constructor(nativePointer) {
+    this.id = -1;
+    this.nativePointer = nativePointer;
+    this.pageX = nativePointer.pageX;
+    this.pageY = nativePointer.pageY;
+    this.clientX = nativePointer.clientX;
+    this.clientY = nativePointer.clientY;
+    if (self.Touch && nativePointer instanceof Touch) {
+      this.id = nativePointer.identifier;
+    } else if (isPointerEvent(nativePointer)) {
+      this.id = nativePointer.pointerId;
+    }
+  }
+  getCoalesced() {
+    if ("getCoalescedEvents" in this.nativePointer) {
+      const events = this.nativePointer.getCoalescedEvents().map((p) => new Pointer(p));
+      if (events.length > 0)
+        return events;
+    }
+    return [this];
+  }
+}
+const isPointerEvent = (event) => "pointerId" in event;
+const isTouchEvent = (event) => "changedTouches" in event;
+const noop = () => {
+};
+class PointerTracker {
+  constructor(_element, { start = () => true, move = noop, end = noop, rawUpdates = false, avoidPointerEvents = false, eventListenerOptions = { capture: false, passive: false, once: false } } = {}) {
+    this._element = _element;
+    this.startPointers = [];
+    this.currentPointers = [];
+    this._excludeFromButtonsCheck = /* @__PURE__ */ new Set();
+    this._pointerStart = (event) => {
+      if (isPointerEvent(event) && event.buttons === 0) {
+        this._excludeFromButtonsCheck.add(event.pointerId);
+      } else if (!(event.buttons & 1)) {
+        return;
+      }
+      const pointer = new Pointer(event);
+      if (this.currentPointers.some((p) => p.id === pointer.id))
+        return;
+      if (!this._triggerPointerStart(pointer, event))
+        return;
+      if (isPointerEvent(event)) {
+        const capturingElement = event.target && "setPointerCapture" in event.target ? event.target : this._element;
+        capturingElement.setPointerCapture(event.pointerId);
+        this._element.addEventListener(this._rawUpdates ? "pointerrawupdate" : "pointermove", this._move, this._eventListenerOptions);
+        this._element.addEventListener("pointerup", this._pointerEnd, this._eventListenerOptions);
+        this._element.addEventListener("pointercancel", this._pointerEnd, this._eventListenerOptions);
+      } else {
+        window.addEventListener("mousemove", this._move);
+        window.addEventListener("mouseup", this._pointerEnd);
+      }
+    };
+    this._touchStart = (event) => {
+      for (const touch of Array.from(event.changedTouches)) {
+        this._triggerPointerStart(new Pointer(touch), event);
+      }
+    };
+    this._move = (event) => {
+      if (!isTouchEvent(event) && (!isPointerEvent(event) || !this._excludeFromButtonsCheck.has(event.pointerId)) && event.buttons === 0) {
+        this._pointerEnd(event);
+        return;
+      }
+      const previousPointers = this.currentPointers.slice();
+      const changedPointers = isTouchEvent(event) ? Array.from(event.changedTouches).map((t) => new Pointer(t)) : [new Pointer(event)];
+      const trackedChangedPointers = [];
+      for (const pointer of changedPointers) {
+        const index2 = this.currentPointers.findIndex((p) => p.id === pointer.id);
+        if (index2 === -1)
+          continue;
+        trackedChangedPointers.push(pointer);
+        this.currentPointers[index2] = pointer;
+      }
+      if (trackedChangedPointers.length === 0)
+        return;
+      this._moveCallback(previousPointers, trackedChangedPointers, event);
+    };
+    this._triggerPointerEnd = (pointer, event) => {
+      if (!isTouchEvent(event) && event.buttons & 1) {
+        return false;
+      }
+      const index2 = this.currentPointers.findIndex((p) => p.id === pointer.id);
+      if (index2 === -1)
+        return false;
+      this.currentPointers.splice(index2, 1);
+      this.startPointers.splice(index2, 1);
+      this._excludeFromButtonsCheck.delete(pointer.id);
+      const cancelled = !(event.type === "mouseup" || event.type === "touchend" || event.type === "pointerup");
+      this._endCallback(pointer, event, cancelled);
+      return true;
+    };
+    this._pointerEnd = (event) => {
+      if (!this._triggerPointerEnd(new Pointer(event), event))
+        return;
+      if (isPointerEvent(event)) {
+        if (this.currentPointers.length)
+          return;
+        this._element.removeEventListener(this._rawUpdates ? "pointerrawupdate" : "pointermove", this._move);
+        this._element.removeEventListener("pointerup", this._pointerEnd);
+        this._element.removeEventListener("pointercancel", this._pointerEnd);
+      } else {
+        window.removeEventListener("mousemove", this._move);
+        window.removeEventListener("mouseup", this._pointerEnd);
+      }
+    };
+    this._touchEnd = (event) => {
+      for (const touch of Array.from(event.changedTouches)) {
+        this._triggerPointerEnd(new Pointer(touch), event);
+      }
+    };
+    this._startCallback = start;
+    this._moveCallback = move;
+    this._endCallback = end;
+    this._rawUpdates = rawUpdates && "onpointerrawupdate" in window;
+    this._eventListenerOptions = eventListenerOptions;
+    if (self.PointerEvent && !avoidPointerEvents) {
+      this._element.addEventListener("pointerdown", this._pointerStart, this._eventListenerOptions);
+    } else {
+      this._element.addEventListener("mousedown", this._pointerStart, this._eventListenerOptions);
+      this._element.addEventListener("touchstart", this._touchStart, this._eventListenerOptions);
+      this._element.addEventListener("touchmove", this._move, this._eventListenerOptions);
+      this._element.addEventListener("touchend", this._touchEnd, this._eventListenerOptions);
+      this._element.addEventListener("touchcancel", this._touchEnd, this._eventListenerOptions);
+    }
+  }
+  stop() {
+    this._element.removeEventListener("pointerdown", this._pointerStart);
+    this._element.removeEventListener("mousedown", this._pointerStart);
+    this._element.removeEventListener("touchstart", this._touchStart);
+    this._element.removeEventListener("touchmove", this._move);
+    this._element.removeEventListener("touchend", this._touchEnd);
+    this._element.removeEventListener("touchcancel", this._touchEnd);
+    this._element.removeEventListener(this._rawUpdates ? "pointerrawupdate" : "pointermove", this._move);
+    this._element.removeEventListener("pointerup", this._pointerEnd);
+    this._element.removeEventListener("pointercancel", this._pointerEnd);
+    window.removeEventListener("mousemove", this._move);
+    window.removeEventListener("mouseup", this._pointerEnd);
+  }
+  _triggerPointerStart(pointer, event) {
+    if (!this._startCallback(pointer, event))
+      return false;
+    this.currentPointers.push(pointer);
+    this.startPointers.push(pointer);
+    return true;
+  }
 }
 function is_date(obj) {
   return Object.prototype.toString.call(obj) === "[object Date]";
@@ -1640,8 +1788,8 @@ function create_fragment$1(ctx) {
         toggle_class(div, "focus", ctx2[13]);
       }
     },
-    i: noop,
-    o: noop,
+    i: noop$1,
+    o: noop$1,
     d(detaching) {
       if (detaching)
         detach(div);
@@ -2455,7 +2603,7 @@ function instance($$self, $$props, $$invalidate) {
   let alignValueToStep;
   let orientationStart;
   let orientationEnd;
-  let $springPositions, $$unsubscribe_springPositions = noop, $$subscribe_springPositions = () => ($$unsubscribe_springPositions(), $$unsubscribe_springPositions = subscribe(springPositions, ($$value) => $$invalidate(29, $springPositions = $$value)), springPositions);
+  let $springPositions, $$unsubscribe_springPositions = noop$1, $$subscribe_springPositions = () => ($$unsubscribe_springPositions(), $$unsubscribe_springPositions = subscribe(springPositions, ($$value) => $$invalidate(29, $springPositions = $$value)), springPositions);
   $$self.$$.on_destroy.push(() => $$unsubscribe_springPositions());
   let { slider = void 0 } = $$props;
   let { range = false } = $$props;
@@ -2933,5 +3081,5 @@ class RangeSlider extends SvelteComponent {
     }, null, [-1, -1, -1]);
   }
 }
-export { RangeSlider, SvelteComponent, action_destroyer, add_flush_callback, afterUpdate, append_hydration, assign, attr, bind, binding_callbacks, check_outros, children, claim_component, claim_element, claim_space, claim_text, create_component, create_slot, destroy_component, destroy_each, detach, element, empty, get_all_dirty_from_scope, get_slot_changes, get_spread_object, get_spread_update, group_outros, init, insert_hydration, is_function, listen, mount_component, noop, onMount, run_all, safe_not_equal, setContext, set_data, set_style, space, text, tick, transition_in, transition_out, update_slot_base, writable };
-//# sourceMappingURL=vendor-4503c6b9.js.map
+export { PointerTracker, RangeSlider, SvelteComponent, action_destroyer, add_flush_callback, afterUpdate, append_hydration, assign, attr, bind, binding_callbacks, check_outros, children, claim_component, claim_element, claim_space, claim_text, create_component, create_slot, destroy_component, destroy_each, detach, element, empty, get_all_dirty_from_scope, get_slot_changes, get_spread_object, get_spread_update, group_outros, init, insert_hydration, listen, mount_component, noop$1 as noop, onMount, run_all, safe_not_equal, setContext, set_data, set_style, space, text, tick, transition_in, transition_out, update_slot_base, writable };
+//# sourceMappingURL=vendor-284fb475.js.map
