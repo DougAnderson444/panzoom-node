@@ -103,11 +103,25 @@ export default class PinchZoom {
 			start: (pointer, event) => {
 				console.log('PanZoom Start', { pointer }, pointerTracker.currentPointers.length);
 				// We only want to track 2 pointers at most
-				if (pointerTracker.currentPointers.length === 2 || !this._parentEl) {
-					return false;
-				} else {
-					event.preventDefault();
+				// there already exists 2 pointers, and now this would have been the 3rd pointer so let's stop here
+				if (pointerTracker.currentPointers.length === 2 || !this._parentEl) return false;
+
+				event.preventDefault();
+
+				if (pointerTracker.currentPointers.length === 1) {
+					// there already exists one pointer, and now this is the second pointer
+					// then it's a pinch zoom and can be from anywhere, incl if the pointer is over a DOM tree child
+					// events on this element are captured (see eventListenerOptions above) so stopping prop means they don't go down the DOM tree
 					event.stopPropagation(); // if it's a 2 touch move, we want exclusive rights over the pointer
+				}
+
+				if (
+					pointerTracker.currentPointers.length === 0 &&
+					(event.target == this._parentEl || event.target == node)
+				) {
+					// if length == 0, then this is the first pointer tracked
+					// it's for panning, but only on the parent or this node
+					// so event.target has to be on this node or it's parent to pan everybody
 					return true;
 				}
 			},
