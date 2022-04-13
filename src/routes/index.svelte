@@ -1,5 +1,6 @@
 <script>
 	import { panzoom } from '$lib/panzoom.js';
+	import { pzoom } from '$lib/pzoom';
 	import Spot from '$lib/_components/Spot.svelte';
 	import RangeSlider from 'svelte-range-slider-pips';
 
@@ -87,7 +88,7 @@
 
 		<div>Style: {style}</div>
 	</div>
-	<div class="zoomable flexbox" bind:this={zoomable} use:panzoom={{ scale }} on:zoomed={handleZoom}>
+	<div class="zoomable flexbox" bind:this={zoomable} use:pzoom on:zoomed={handleZoom}>
 		{#if container}
 			<div class="grid">
 				{#each grid as col, x}

@@ -101,6 +101,7 @@ export default class PinchZoom {
 		const pointerTracker: PointerTracker = new PointerTracker(this._parentEl, {
 			eventListenerOptions: { capture: true }, // catch the event before it goes to child in the DOM tree
 			start: (pointer, event) => {
+				console.log('PanZoom Start', { pointer }, pointerTracker.currentPointers.length);
 				// We only want to track 2 pointers at most
 				if (pointerTracker.currentPointers.length === 2 || !this._parentEl) return false;
 				event.preventDefault();
