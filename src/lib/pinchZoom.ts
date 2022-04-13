@@ -113,6 +113,7 @@ export default class PinchZoom {
 					// then it's a pinch zoom and can be from anywhere, incl if the pointer is over a DOM tree child
 					// events on this element are captured (see eventListenerOptions above) so stopping prop means they don't go down the DOM tree
 					event.stopPropagation(); // if it's a 2 touch move, we want exclusive rights over the pointer
+					return true;
 				}
 
 				if (
@@ -124,6 +125,7 @@ export default class PinchZoom {
 					// so event.target has to be on this node or it's parent to pan everybody
 					return true;
 				}
+				// else, the pointer event must have happened on a child node, where pan doesn't apply
 			},
 			move: (previousPointers) => {
 				event.stopPropagation(); // continue exclusive rights over the pointer from DOM tree
@@ -349,8 +351,8 @@ export default class PinchZoom {
 		const newMidpoint = getMidpoint(currentPointers[0], currentPointers[1]);
 
 		// Midpoint within the element
-		const originX = prevMidpoint.clientX - currentRect.left - currentRect.width / 2;
-		const originY = prevMidpoint.clientY - currentRect.top - currentRect.height / 2;
+		const originX = prevMidpoint.clientX - currentRect.left;
+		const originY = prevMidpoint.clientY - currentRect.top;
 
 		// Calculate the desired change in scale
 		const prevDistance = getDistance(previousPointers[0], previousPointers[1]);
