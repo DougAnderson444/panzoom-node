@@ -84,6 +84,8 @@ export default class PinchZoom {
 	// Current transform.
 	private _transform: DOMMatrix = createMatrix();
 
+	private _pointerTracker: PointerTracker;
+
 	static get observedAttributes() {
 		return [minScaleAttr];
 	}
@@ -98,17 +100,17 @@ export default class PinchZoom {
 		new MutationObserver(() => this._stageElChange()).observe(this.node, { childList: true });
 
 		// Watch for pointers
-		const pointerTracker: PointerTracker = new PointerTracker(this._parentEl, {
+		this._pointerTracker = new PointerTracker(this._parentEl, {
 			eventListenerOptions: { capture: true }, // catch the event before it goes to child in the DOM tree
 			start: (pointer, event) => {
-				console.log('PanZoom Start', { pointer }, pointerTracker.currentPointers.length);
+				console.log('PanZoom Start', { pointer }, this._pointerTracker.currentPointers.length);
 				// We only want to track 2 pointers at most
 				// there already exists 2 pointers, and now this would have been the 3rd pointer so let's stop here
-				if (pointerTracker.currentPointers.length === 2 || !this._parentEl) return false;
+				if (this._pointerTracker.currentPointers.length === 2 || !this._parentEl) return false;
 
 				event.preventDefault();
 
-				if (pointerTracker.currentPointers.length === 1) {
+				if (this._pointerTracker.currentPointers.length === 1) {
 					// there already exists one pointer, and now this is the second pointer
 					// then it's a pinch zoom and can be from anywhere, incl if the pointer is over a DOM tree child
 					// events on this element are captured (see eventListenerOptions above) so stopping prop means they don't go down the DOM tree
@@ -117,7 +119,7 @@ export default class PinchZoom {
 				}
 
 				if (
-					pointerTracker.currentPointers.length === 0 &&
+					this._pointerTracker.currentPointers.length === 0 &&
 					(event.target == this._parentEl || event.target == node)
 				) {
 					// if length == 0, then this is the first pointer tracked
@@ -127,9 +129,16 @@ export default class PinchZoom {
 				}
 				// else, the pointer event must have happened on a child node, where pan doesn't apply
 			},
-			move: (previousPointers) => {
+			move: (previousPointers, changedPointers, event) => {
 				event.stopPropagation(); // continue exclusive rights over the pointer from DOM tree
-				this._onPointerMove(previousPointers, pointerTracker.currentPointers);
+				this._onPointerMove(previousPointers, this._pointerTracker.currentPointers);
+			},
+			end: (pointer, event, cancelled) => {
+				console.log(
+					'PanZoom End',
+					{ pointer, event, cancelled },
+					this._pointerTracker.currentPointers.length
+				);
 			}
 		});
 
