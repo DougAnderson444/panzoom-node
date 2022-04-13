@@ -351,8 +351,8 @@ export default class PinchZoom {
 		const newMidpoint = getMidpoint(currentPointers[0], currentPointers[1]);
 
 		// Midpoint within the element
-		const originX = prevMidpoint.clientX - currentRect.left;
-		const originY = prevMidpoint.clientY - currentRect.top;
+		const originX = prevMidpoint.clientX - currentRect.left - currentRect.width / 2;
+		const originY = prevMidpoint.clientY - currentRect.top - currentRect.height / 2;
 
 		// Calculate the desired change in scale
 		const prevDistance = getDistance(previousPointers[0], previousPointers[1]);
