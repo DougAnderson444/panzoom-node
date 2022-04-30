@@ -890,7 +890,7 @@ function notifiable_store(value) {
 }
 function create_updated_store() {
   const { set, subscribe } = writable(false);
-  const initial = "1651317717258";
+  const initial = "1651318791134";
   let timeout;
   async function check() {
     clearTimeout(timeout);
@@ -1830,4 +1830,4 @@ async function start({ paths, target, session, route, spa, trailing_slash, hydra
   dispatchEvent(new CustomEvent("sveltekit:start"));
 }
 export { start };
-//# sourceMappingURL=start-0a804a02.js.map
+//# sourceMappingURL=start-07311ea4.js.map
