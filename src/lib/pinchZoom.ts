@@ -104,9 +104,18 @@ export default class PinchZoom {
 		this._pointerTracker = new PointerTracker(this._parentEl, {
 			eventListenerOptions: { capture: true }, // catch the event before it goes to child in the DOM tree
 			start: (pointer, event) => {
-				// We only want to track 2 pointers at most
-				// there already exists 2 pointers, and now this would have been the 3rd pointer so let's stop here
-				if (this._pointerTracker.currentPointers.length === 2 || !this._parentEl) return false;
+				// ignore single pointers on input / editable elements
+				if (
+					this._pointerTracker.currentPointers.length === 0 &&
+					(event.target instanceof HTMLInputElement || event.target.isContentEditable)
+				) {
+					return false;
+				}
+
+				if (this._pointerTracker.currentPointers.length === 2 || !this._parentEl)
+					// We only want to track 2 pointers at most
+					// there already exists 2 pointers, and now this would have been the 3rd pointer so let's stop here
+					return false;
 
 				event.preventDefault();
 
@@ -130,21 +139,22 @@ export default class PinchZoom {
 				// else, the pointer event must have happened on a child node, where pan doesn't apply
 			},
 			move: (previousPointers, changedPointers, event) => {
-				// console.log(`PanZoom MOVE currentPointers: ${this._pointerTracker.currentPointers.length}`);
-
 				// tracking purposes only, no action
-				if (this._pointerTracker.currentPointers.length === 0) return
+				if (this._pointerTracker.currentPointers.length === 0) return;
 
 				// If it's a single pointer in a child, ignore it
-				if (this._pointerTracker.currentPointers.length === 1 && !(event.target == this._parentEl || event.target == node)) return
+				if (
+					this._pointerTracker.currentPointers.length === 1 &&
+					!(event.target == this._parentEl || event.target == node)
+				)
+					return;
 
 				// pan if single pointer on parent container or target node
 				// zoom if double pointer anywhere
 				event.stopPropagation(); // continue exclusive rights over the pointer from DOM tree
 				this._onPointerMove(previousPointers, this._pointerTracker.currentPointers);
 			},
-			end: (pointer, event, cancelled) => {
-			}
+			end: (pointer, event, cancelled) => {}
 		});
 
 		this._parentEl.addEventListener('wheel', (event) => this._onWheel(event));
