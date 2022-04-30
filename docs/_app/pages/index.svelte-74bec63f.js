@@ -187,6 +187,9 @@ class PinchZoom {
     this._pointerTracker = new PointerTracker(this._parentEl, {
       eventListenerOptions: { capture: true },
       start: (pointer, event) => {
+        if (this._pointerTracker.currentPointers.length === 0 && (event.target instanceof HTMLInputElement || event.target.isContentEditable)) {
+          return false;
+        }
         if (this._pointerTracker.currentPointers.length === 2 || !this._parentEl)
           return false;
         event.preventDefault();
@@ -3334,4 +3337,4 @@ class Routes extends SvelteComponent {
   }
 }
 export { Routes as default };
-//# sourceMappingURL=index.svelte-698267e4.js.map
+//# sourceMappingURL=index.svelte-74bec63f.js.map
