@@ -1,7 +1,7 @@
 {
 	"name": "@douganderson444/panzoom-node",
-	"version": "1.0.14",
-	"svelte": "./src/lib/index.js",
+	"version": "1.0.15",
+	"module": "./src/lib/index.js",
 	"scripts": {
 		"dev": "svelte-kit dev --port 6969",
 		"build": "svelte-kit build",
