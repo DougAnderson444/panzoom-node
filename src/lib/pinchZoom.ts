@@ -117,12 +117,11 @@ export default class PinchZoom {
 					// there already exists 2 pointers, and now this would have been the 3rd pointer so let's stop here
 					return false;
 
-				event.preventDefault();
-
 				if (this._pointerTracker.currentPointers.length === 1) {
 					// there already exists one pointer, and now this is the second pointer
 					// then it's a pinch zoom and can be from anywhere, incl if the pointer is over a DOM tree child
 					// events on this element are captured (see eventListenerOptions above) so stopping prop means they don't go down the DOM tree
+					event.preventDefault();
 					event.stopPropagation(); // if it's a 2 touch move, we want exclusive rights over the pointer
 					return true;
 				}
@@ -137,6 +136,7 @@ export default class PinchZoom {
 					return true;
 				}
 				// else, the pointer event must have happened on a child node, where pan doesn't apply
+				return false;
 			},
 			move: (previousPointers, changedPointers, event) => {
 				// tracking purposes only, no action
