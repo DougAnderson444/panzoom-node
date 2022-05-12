@@ -192,14 +192,15 @@ class PinchZoom {
         }
         if (this._pointerTracker.currentPointers.length === 2 || !this._parentEl)
           return false;
-        event.preventDefault();
         if (this._pointerTracker.currentPointers.length === 1) {
+          event.preventDefault();
           event.stopPropagation();
           return true;
         }
         if (this._pointerTracker.currentPointers.length === 0) {
           return true;
         }
+        return false;
       },
       move: (previousPointers, changedPointers, event) => {
         if (this._pointerTracker.currentPointers.length === 0)
@@ -3337,4 +3338,4 @@ class Routes extends SvelteComponent {
   }
 }
 export { Routes as default };
-//# sourceMappingURL=index.svelte-74bec63f.js.map
+//# sourceMappingURL=index.svelte-70986e2d.js.map
