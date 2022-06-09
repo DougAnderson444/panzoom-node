@@ -1,6 +1,6 @@
 {
 	"name": "@douganderson444/panzoom-node",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"module": "./src/lib/index.js",
 	"scripts": {
 		"dev": "svelte-kit dev --port 6969",
@@ -34,6 +34,6 @@
 		"panzoom"
 	],
 	"dependencies": {
-		"pointer-tracker": "github:DougAnderson444/pointer-tracker"
+		"@douganderson444/pointer-tracker": "github:DougAnderson444/pointer-tracker"
 	}
 }
