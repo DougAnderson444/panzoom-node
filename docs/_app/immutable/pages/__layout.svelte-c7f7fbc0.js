@@ -1,5 +1,5 @@
 import { SvelteComponent, init, safe_not_equal, create_slot, update_slot_base, get_all_dirty_from_scope, get_slot_changes, transition_in, transition_out } from "../chunks/index-21dc824a.js";
-var app = "";
+var app = /* @__PURE__ */ (() => "* { \r\n	margin: 0;\r\n	padding: 0;\r\n	box-sizing: border-box;\r\n}\r\n\r\nbody {\r\n	min-height: 100vh;\r\n	margin: 0;\r\n}")();
 function create_fragment(ctx) {
   let current;
   const default_slot_template = ctx[1].default;
@@ -57,4 +57,4 @@ class _layout extends SvelteComponent {
   }
 }
 export { _layout as default };
-//# sourceMappingURL=__layout.svelte-867effa0.js.map
+//# sourceMappingURL=__layout.svelte-c7f7fbc0.js.map

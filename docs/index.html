@@ -6,13 +6,13 @@
 		<link rel="icon" href="/panzoom-node/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta http-equiv="content-security-policy" content="">
-	<link rel="stylesheet" href="/panzoom-node/_app/assets/pages/__layout.svelte-ec595e4a.css">
-	<link rel="stylesheet" href="/panzoom-node/_app/assets/pages/index.svelte-b492f156.css">
-	<link rel="modulepreload" href="/panzoom-node/_app/start-40c66b3d.js">
-	<link rel="modulepreload" href="/panzoom-node/_app/chunks/index-21dc824a.js">
-	<link rel="modulepreload" href="/panzoom-node/_app/chunks/index-eb09cf72.js">
-	<link rel="modulepreload" href="/panzoom-node/_app/pages/__layout.svelte-867effa0.js">
-	<link rel="modulepreload" href="/panzoom-node/_app/pages/index.svelte-70986e2d.js">
+	<link rel="stylesheet" href="/panzoom-node/_app/immutable/assets/pages/__layout.svelte-ec595e4a.css">
+	<link rel="stylesheet" href="/panzoom-node/_app/immutable/assets/pages/index.svelte-b492f156.css">
+	<link rel="modulepreload" href="/panzoom-node/_app/immutable/start-13811e51.js">
+	<link rel="modulepreload" href="/panzoom-node/_app/immutable/chunks/index-21dc824a.js">
+	<link rel="modulepreload" href="/panzoom-node/_app/immutable/chunks/index-eb09cf72.js">
+	<link rel="modulepreload" href="/panzoom-node/_app/immutable/pages/__layout.svelte-c7f7fbc0.js">
+	<link rel="modulepreload" href="/panzoom-node/_app/immutable/pages/index.svelte-c7ed896e.js">
 	</head>
 	<body>
 		<div>
@@ -81,10 +81,10 @@
 </div>
 
 
-		<script type="module" data-hydrate="dtn40s">
-		import { start } from "/panzoom-node/_app/start-40c66b3d.js";
+		<script type="module" data-sveltekit-hydrate="dtn40s">
+		import { start } from "/panzoom-node/_app/immutable/start-13811e51.js";
 		start({
-			target: document.querySelector('[data-hydrate="dtn40s"]').parentNode,
+			target: document.querySelector('[data-sveltekit-hydrate="dtn40s"]').parentNode,
 			paths: {"base":"/panzoom-node","assets":"/panzoom-node"},
 			session: {},
 			route: true,
@@ -93,10 +93,7 @@
 			hydrate: {
 				status: 200,
 				error: null,
-				nodes: [
-					import("/panzoom-node/_app/pages/__layout.svelte-867effa0.js"),
-						import("/panzoom-node/_app/pages/index.svelte-70986e2d.js")
-				],
+				nodes: [0, 2],
 				params: {},
 				routeId: ""
 			}
