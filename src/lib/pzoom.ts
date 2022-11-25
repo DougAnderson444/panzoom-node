@@ -1,6 +1,7 @@
 import pinchZoom from './pinchZoom';
 
-export const pzoom = (node, params = {}) => {
+export const pzoom = (node, params) => {
+	console.log({ params });
 	let container = node.parentElement || document.body;
 
 	// ensure touch and select action defaults are disable
@@ -17,5 +18,16 @@ export const pzoom = (node, params = {}) => {
 	// node.style['transform-origin'] = '0 0';
 	// node.style['will-change'] = 'transform';
 
-	new pinchZoom(node as HTMLElement);
+	new pinchZoom(node as HTMLElement, { handle: params?.handle });
+
+	return {
+		update(params) {
+			// the value of `bar` has changed
+			new pinchZoom(node as HTMLElement, { handle: params?.handle });
+		},
+
+		destroy() {
+			// the node has been removed from the DOM
+		}
+	};
 };
