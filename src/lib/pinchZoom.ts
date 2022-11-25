@@ -67,7 +67,8 @@ function getAbsoluteValue(value: string | number, max: number): number {
 }
 
 function createMatrix(): DOMMatrix {
-	return new DOMMatrix();
+	// initialize a new 16 element 3D array matrix
+	return new DOMMatrix([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 }
 
 function createPoint(): DOMPoint {
@@ -91,7 +92,10 @@ export default class PinchZoom {
 		return [minScaleAttr];
 	}
 
-	constructor(node: HTMLElement) {
+	/**
+	 * handle - an optional handle element to grab by
+	 */
+	constructor(node: HTMLElement, { handle = null }) {
 		this._node = node;
 		this._parentEl = this._node.parentElement || document.body;
 
