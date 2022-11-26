@@ -5,6 +5,9 @@
 	import RangeSlider from 'svelte-range-slider-pips';
 
 	let zoomable, container;
+
+	let handle;
+
 	let style = ''; // show styling applied
 	let scale = { value: 1 };
 	let count = 10;
@@ -103,6 +106,31 @@
 				{/each}
 			</div>
 		{/if}
+	</div>
+</div>
+
+<h2>Using Handle (WIP)</h2>
+
+<div style="height:600px">
+	<div style="height:600px; width: 600px; border: 1px solid salmon">
+		<div
+			style="box-shadow: 2px 2px 19px #e0e0e0;
+		-o-box-shadow: 2px 2px 19px #e0e0e0;
+		-webkit-box-shadow: 2px 2px 19px #e0e0e0;
+		-moz-box-shadow: 2px 2px 19px #e0e0e0;
+		-moz-border-radius: 8px;
+		border-radius: 8px;
+		background-color: rgba(250, 128, 114, 0.418);
+		width: 200px;
+		height: 200px;
+		padding: 1em;
+		left: 100px;
+		top: 10px;"
+			use:pzoom={{ handle }}
+		>
+			Drag me by my handle:
+			<span bind:this={handle}>Handle</span>
+		</div>
 	</div>
 </div>
 

@@ -88,6 +88,8 @@ export default class PinchZoom {
 
 	private _pointerTracker: PointerTracker;
 
+	private _handle: HTMLElement | null = null;
+
 	static get observedAttributes() {
 		return [minScaleAttr];
 	}
@@ -95,9 +97,10 @@ export default class PinchZoom {
 	/**
 	 * handle - an optional handle element to grab by
 	 */
-	constructor(node: HTMLElement, { handle = null }) {
+	constructor(node: HTMLElement, { handle }: { handle?: HTMLElement | null } = {}) {
 		this._node = node;
 		this._parentEl = this._node.parentElement || document.body;
+		this._handle = handle;
 
 		// Watch for children changes.
 		// Note this won't fire for initial contents,
@@ -146,7 +149,7 @@ export default class PinchZoom {
 				// tracking purposes only, no action
 				if (this._pointerTracker.currentPointers.length === 0) return;
 
-				// If it's a single pointer in a child, ignore it
+				// If it's a single pointer in a child, ignore it, unless it's a handle
 				if (
 					this._pointerTracker.currentPointers.length === 1 &&
 					!(event.target == this._parentEl || event.target == node)
