@@ -172,17 +172,19 @@ function getAbsoluteValue(value, max) {
   return parseFloat(value);
 }
 function createMatrix() {
-  return new DOMMatrix();
+  return new DOMMatrix([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 }
 function createPoint() {
   return new DOMPoint();
 }
 const MIN_SCALE = 0.01;
 class PinchZoom {
-  constructor(node) {
+  constructor(node, { handle } = {}) {
     this._transform = createMatrix();
+    this._handle = null;
     this._node = node;
     this._parentEl = this._node.parentElement || document.body;
+    this._handle = handle;
     new MutationObserver(() => this._stageElChange()).observe(this._node, { childList: true });
     this._pointerTracker = new PointerTracker(this._parentEl, {
       eventListenerOptions: { capture: true },
@@ -374,7 +376,8 @@ class PinchZoom {
     });
   }
 }
-const pzoom = (node, params = {}) => {
+const pzoom = (node, params) => {
+  console.log({ params });
   let container = node.parentElement || document.body;
   container.style["touch-action"] = "none";
   container.style["user-select"] = "none";
@@ -383,7 +386,14 @@ const pzoom = (node, params = {}) => {
   node.style["touch-action"] = "none";
   node.style["user-select"] = "none";
   node.style["position"] = "absolute";
-  new PinchZoom(node);
+  new PinchZoom(node, { handle: params == null ? void 0 : params.handle });
+  return {
+    update(params2) {
+      new PinchZoom(node, { handle: params2 == null ? void 0 : params2.handle });
+    },
+    destroy() {
+    }
+  };
 };
 var Spot_svelte_svelte_type_style_lang = /* @__PURE__ */ (() => "div.svelte-m6n0ej{--size:20px;position:absolute;background-color:var(--color);border:1px solid #00000049;width:var(--size);height:var(--size)}")();
 function create_fragment$3(ctx) {
@@ -2713,14 +2723,14 @@ class RangeSlider extends SvelteComponent {
 var index_svelte_svelte_type_style_lang = /* @__PURE__ */ (() => ".container.svelte-1teec0a{border:3px solid red;height:600px;width:600px;margin:3em}.zoomable.svelte-1teec0a{border:4px dashed blue;height:100%;width:100%}.flexbox.svelte-1teec0a{display:flex;flex-wrap:nowrap;align-content:stretch;justify-content:space-evenly;align-items:stretch}.menu.svelte-1teec0a{position:absolute;top:10px;left:10px;margin:0.1em;padding:2em;z-index:10;background-color:rgba(133, 198, 255, 0.801)}")();
 function get_each_context(ctx, list, i) {
   const child_ctx = ctx.slice();
-  child_ctx[12] = list[i];
-  child_ctx[14] = i;
+  child_ctx[14] = list[i];
+  child_ctx[16] = i;
   return child_ctx;
 }
 function get_each_context_1(ctx, list, i) {
   const child_ctx = ctx.slice();
-  child_ctx[15] = list[i];
-  child_ctx[17] = i;
+  child_ctx[17] = list[i];
+  child_ctx[19] = i;
   return child_ctx;
 }
 function create_if_block_1(ctx) {
@@ -2730,13 +2740,13 @@ function create_if_block_1(ctx) {
   let updating_values;
   let current;
   function rangeslider_values_binding(value) {
-    ctx[8](value);
+    ctx[9](value);
   }
   let rangeslider_props = {
     pips: true,
     min: 0.5,
     step: 0.5,
-    max: ((_a = ctx[4]) == null ? void 0 : _a.max) || 20,
+    max: ((_a = ctx[5]) == null ? void 0 : _a.max) || 20,
     float: true
   };
   if (ctx[0] !== void 0) {
@@ -2763,8 +2773,8 @@ function create_if_block_1(ctx) {
     p(ctx2, dirty) {
       var _a2;
       const rangeslider_changes = {};
-      if (dirty & 16)
-        rangeslider_changes.max = ((_a2 = ctx2[4]) == null ? void 0 : _a2.max) || 20;
+      if (dirty & 32)
+        rangeslider_changes.max = ((_a2 = ctx2[5]) == null ? void 0 : _a2.max) || 20;
       if (!updating_values && dirty & 1) {
         updating_values = true;
         rangeslider_changes.values = ctx2[0];
@@ -2792,7 +2802,7 @@ function create_if_block_1(ctx) {
 function create_if_block(ctx) {
   let div;
   let current;
-  let each_value = ctx[7];
+  let each_value = ctx[8];
   let each_blocks = [];
   for (let i = 0; i < each_value.length; i += 1) {
     each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
@@ -2828,8 +2838,8 @@ function create_if_block(ctx) {
       current = true;
     },
     p(ctx2, dirty) {
-      if (dirty & 164) {
-        each_value = ctx2[7];
+      if (dirty & 324) {
+        each_value = ctx2[8];
         let i;
         for (i = 0; i < each_value.length; i += 1) {
           const child_ctx = get_each_context(ctx2, each_value, i);
@@ -2877,8 +2887,8 @@ function create_each_block_1(ctx) {
   let current;
   spot = new Spot({
     props: {
-      left: ctx[5] + ctx[14] * ctx[2].offsetWidth / count,
-      top: ctx[5] + ctx[17] * ctx[2].offsetWidth / count
+      left: ctx[6] + ctx[16] * ctx[2].offsetWidth / count,
+      top: ctx[6] + ctx[19] * ctx[2].offsetWidth / count
     }
   });
   return {
@@ -2895,9 +2905,9 @@ function create_each_block_1(ctx) {
     p(ctx2, dirty) {
       const spot_changes = {};
       if (dirty & 4)
-        spot_changes.left = ctx2[5] + ctx2[14] * ctx2[2].offsetWidth / count;
+        spot_changes.left = ctx2[6] + ctx2[16] * ctx2[2].offsetWidth / count;
       if (dirty & 4)
-        spot_changes.top = ctx2[5] + ctx2[17] * ctx2[2].offsetWidth / count;
+        spot_changes.top = ctx2[6] + ctx2[19] * ctx2[2].offsetWidth / count;
       spot.$set(spot_changes);
     },
     i(local) {
@@ -2919,7 +2929,7 @@ function create_each_block(ctx) {
   let div;
   let t;
   let current;
-  let each_value_1 = ctx[12];
+  let each_value_1 = ctx[14];
   let each_blocks = [];
   for (let i = 0; i < each_value_1.length; i += 1) {
     each_blocks[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
@@ -2958,8 +2968,8 @@ function create_each_block(ctx) {
       current = true;
     },
     p(ctx2, dirty) {
-      if (dirty & 36) {
-        each_value_1 = ctx2[12];
+      if (dirty & 68) {
+        each_value_1 = ctx2[14];
         let i;
         for (i = 0; i < each_value_1.length; i += 1) {
           const child_ctx = get_each_context_1(ctx2, each_value_1, i);
@@ -3010,7 +3020,7 @@ function create_fragment(ctx) {
   let p0;
   let t2;
   let t3;
-  let h2;
+  let h20;
   let t4;
   let t5;
   let p1;
@@ -3020,7 +3030,7 @@ function create_fragment(ctx) {
   let div3;
   let div1;
   let t8;
-  let t9_value = ctx[4].value.toFixed(5) + "";
+  let t9_value = ctx[5].value.toFixed(5) + "";
   let t9;
   let t10;
   let t11_value = JSON.stringify(ctx[0]) + "";
@@ -3032,6 +3042,17 @@ function create_fragment(ctx) {
   let t15;
   let t16;
   let div4;
+  let t17;
+  let h21;
+  let t18;
+  let t19;
+  let div8;
+  let div7;
+  let div6;
+  let t20;
+  let span;
+  let t21;
+  let pzoom_action_1;
   let current;
   let mounted;
   let dispose;
@@ -3046,7 +3067,7 @@ function create_fragment(ctx) {
       p0 = element("p");
       t2 = text("Try out the mouse wheel scroll in the red box below");
       t3 = space();
-      h2 = element("h2");
+      h20 = element("h2");
       t4 = text("Inside");
       t5 = space();
       p1 = element("p");
@@ -3065,11 +3086,21 @@ function create_fragment(ctx) {
       t13 = space();
       div2 = element("div");
       t14 = text("Style: ");
-      t15 = text(ctx[3]);
+      t15 = text(ctx[4]);
       t16 = space();
       div4 = element("div");
       if (if_block1)
         if_block1.c();
+      t17 = space();
+      h21 = element("h2");
+      t18 = text("Using Handle (WIP)");
+      t19 = space();
+      div8 = element("div");
+      div7 = element("div");
+      div6 = element("div");
+      t20 = text("Drag me by my handle:\n			");
+      span = element("span");
+      t21 = text("Handle");
       this.h();
     },
     l(nodes) {
@@ -3085,10 +3116,10 @@ function create_fragment(ctx) {
       t2 = claim_text(p0_nodes, "Try out the mouse wheel scroll in the red box below");
       p0_nodes.forEach(detach);
       t3 = claim_space(div0_nodes);
-      h2 = claim_element(div0_nodes, "H2", {});
-      var h2_nodes = children(h2);
-      t4 = claim_text(h2_nodes, "Inside");
-      h2_nodes.forEach(detach);
+      h20 = claim_element(div0_nodes, "H2", {});
+      var h20_nodes = children(h20);
+      t4 = claim_text(h20_nodes, "Inside");
+      h20_nodes.forEach(detach);
       t5 = claim_space(div0_nodes);
       p1 = claim_element(div0_nodes, "P", {});
       var p1_nodes = children(p1);
@@ -3114,7 +3145,7 @@ function create_fragment(ctx) {
       div2 = claim_element(div3_nodes, "DIV", {});
       var div2_nodes = children(div2);
       t14 = claim_text(div2_nodes, "Style: ");
-      t15 = claim_text(div2_nodes, ctx[3]);
+      t15 = claim_text(div2_nodes, ctx[4]);
       div2_nodes.forEach(detach);
       div3_nodes.forEach(detach);
       t16 = claim_space(div5_nodes);
@@ -3124,12 +3155,48 @@ function create_fragment(ctx) {
         if_block1.l(div4_nodes);
       div4_nodes.forEach(detach);
       div5_nodes.forEach(detach);
+      t17 = claim_space(nodes);
+      h21 = claim_element(nodes, "H2", {});
+      var h21_nodes = children(h21);
+      t18 = claim_text(h21_nodes, "Using Handle (WIP)");
+      h21_nodes.forEach(detach);
+      t19 = claim_space(nodes);
+      div8 = claim_element(nodes, "DIV", { style: true });
+      var div8_nodes = children(div8);
+      div7 = claim_element(div8_nodes, "DIV", { style: true });
+      var div7_nodes = children(div7);
+      div6 = claim_element(div7_nodes, "DIV", { style: true });
+      var div6_nodes = children(div6);
+      t20 = claim_text(div6_nodes, "Drag me by my handle:\n			");
+      span = claim_element(div6_nodes, "SPAN", {});
+      var span_nodes = children(span);
+      t21 = claim_text(span_nodes, "Handle");
+      span_nodes.forEach(detach);
+      div6_nodes.forEach(detach);
+      div7_nodes.forEach(detach);
+      div8_nodes.forEach(detach);
       this.h();
     },
     h() {
       attr(div3, "class", "menu svelte-1teec0a");
       attr(div4, "class", "zoomable flexbox svelte-1teec0a");
       attr(div5, "class", "container svelte-1teec0a");
+      set_style(div6, "box-shadow", "2px 2px 19px #e0e0e0");
+      set_style(div6, "-o-box-shadow", "2px 2px 19px #e0e0e0");
+      set_style(div6, "-webkit-box-shadow", "2px 2px 19px #e0e0e0");
+      set_style(div6, "-moz-box-shadow", "2px 2px 19px #e0e0e0");
+      set_style(div6, "-moz-border-radius", "8px");
+      set_style(div6, "border-radius", "8px");
+      set_style(div6, "background-color", "rgba(250, 128, 114, 0.418)");
+      set_style(div6, "width", "200px");
+      set_style(div6, "height", "200px");
+      set_style(div6, "padding", "1em");
+      set_style(div6, "left", "100px");
+      set_style(div6, "top", "10px");
+      set_style(div7, "height", "600px");
+      set_style(div7, "width", "600px");
+      set_style(div7, "border", "1px solid salmon");
+      set_style(div8, "height", "600px");
     },
     m(target, anchor) {
       insert_hydration(target, div0, anchor);
@@ -3139,8 +3206,8 @@ function create_fragment(ctx) {
       append_hydration(div0, p0);
       append_hydration(p0, t2);
       append_hydration(div0, t3);
-      append_hydration(div0, h2);
-      append_hydration(h2, t4);
+      append_hydration(div0, h20);
+      append_hydration(h20, t4);
       append_hydration(div0, t5);
       append_hydration(div0, p1);
       append_hydration(p1, t6);
@@ -3163,19 +3230,31 @@ function create_fragment(ctx) {
       append_hydration(div5, div4);
       if (if_block1)
         if_block1.m(div4, null);
-      ctx[9](div4);
-      ctx[10](div5);
+      ctx[10](div4);
+      ctx[11](div5);
+      insert_hydration(target, t17, anchor);
+      insert_hydration(target, h21, anchor);
+      append_hydration(h21, t18);
+      insert_hydration(target, t19, anchor);
+      insert_hydration(target, div8, anchor);
+      append_hydration(div8, div7);
+      append_hydration(div7, div6);
+      append_hydration(div6, t20);
+      append_hydration(div6, span);
+      append_hydration(span, t21);
+      ctx[12](span);
       current = true;
       if (!mounted) {
         dispose = [
           action_destroyer(pzoom.call(null, div4)),
-          listen(div4, "zoomed", ctx[6])
+          listen(div4, "zoomed", ctx[7]),
+          action_destroyer(pzoom_action_1 = pzoom.call(null, div6, { handle: ctx[3] }))
         ];
         mounted = true;
       }
     },
     p(ctx2, [dirty]) {
-      if ((!current || dirty & 16) && t9_value !== (t9_value = ctx2[4].value.toFixed(5) + ""))
+      if ((!current || dirty & 32) && t9_value !== (t9_value = ctx2[5].value.toFixed(5) + ""))
         set_data(t9, t9_value);
       if ((!current || dirty & 1) && t11_value !== (t11_value = JSON.stringify(ctx2[0]) + ""))
         set_data(t11, t11_value);
@@ -3198,8 +3277,8 @@ function create_fragment(ctx) {
         });
         check_outros();
       }
-      if (!current || dirty & 8)
-        set_data(t15, ctx2[3]);
+      if (!current || dirty & 16)
+        set_data(t15, ctx2[4]);
       if (ctx2[2]) {
         if (if_block1) {
           if_block1.p(ctx2, dirty);
@@ -3219,6 +3298,8 @@ function create_fragment(ctx) {
         });
         check_outros();
       }
+      if (pzoom_action_1 && is_function(pzoom_action_1.update) && dirty & 8)
+        pzoom_action_1.update.call(null, { handle: ctx2[3] });
     },
     i(local) {
       if (current)
@@ -3243,8 +3324,17 @@ function create_fragment(ctx) {
         if_block0.d();
       if (if_block1)
         if_block1.d();
-      ctx[9](null);
       ctx[10](null);
+      ctx[11](null);
+      if (detaching)
+        detach(t17);
+      if (detaching)
+        detach(h21);
+      if (detaching)
+        detach(t19);
+      if (detaching)
+        detach(div8);
+      ctx[12](null);
       mounted = false;
       run_all(dispose);
     }
@@ -3253,14 +3343,15 @@ function create_fragment(ctx) {
 let count = 10;
 function instance($$self, $$props, $$invalidate) {
   let zoomable, container;
+  let handle;
   let style = "";
   let scale = { value: 1 };
   let min = count;
   let manualZoom = [1];
   function handleZoom(e) {
     console.log("Zoomed.", { detail: e.detail });
-    $$invalidate(4, scale = e.detail.scale);
-    $$invalidate(3, style = zoomable.style.transform);
+    $$invalidate(5, scale = e.detail.scale);
+    $$invalidate(4, style = zoomable.style.transform);
   }
   const grid = Array.from({ length: count }, (_, i) => Array.from({ length: count }, (_2, j) => ({ id: i * count + j })));
   function setZoom(val) {
@@ -3309,6 +3400,12 @@ function instance($$self, $$props, $$invalidate) {
       $$invalidate(2, container);
     });
   }
+  function span_binding($$value) {
+    binding_callbacks[$$value ? "unshift" : "push"](() => {
+      handle = $$value;
+      $$invalidate(3, handle);
+    });
+  }
   $$self.$$.update = () => {
     if ($$self.$$.dirty & 1) {
       if (manualZoom) {
@@ -3321,6 +3418,7 @@ function instance($$self, $$props, $$invalidate) {
     manualZoom,
     zoomable,
     container,
+    handle,
     style,
     scale,
     min,
@@ -3328,7 +3426,8 @@ function instance($$self, $$props, $$invalidate) {
     grid,
     rangeslider_values_binding,
     div4_binding,
-    div5_binding
+    div5_binding,
+    span_binding
   ];
 }
 class Routes extends SvelteComponent {
@@ -3338,4 +3437,4 @@ class Routes extends SvelteComponent {
   }
 }
 export { Routes as default };
-//# sourceMappingURL=index.svelte-c7ed896e.js.map
+//# sourceMappingURL=index.svelte-247866d0.js.map
