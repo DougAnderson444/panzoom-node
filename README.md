@@ -8,6 +8,7 @@ Zero dependencies. Use as vanilla JS or add this as a Svelte action directive to
 - [x] Mobile
 - [x] Pinch to Zoom over DOM tree children
 - [x] Ignore single pointer input and editable elements
+- [ ] Drag by handle only (TODO: WIP)
 
 ![Demo](svelte-zoom-action.gif)
 
