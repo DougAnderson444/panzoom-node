@@ -29,8 +29,8 @@ var __objRest = (source, exclude) => {
     }
   return target;
 };
-import { SvelteComponent, init as init$1, safe_not_equal, element, claim_element, children, detach, attr, set_style, insert_hydration, text, claim_text, set_data, space, empty, claim_space, group_outros, transition_out, check_outros, transition_in, setContext, afterUpdate, onMount, create_component, claim_component, mount_component, get_spread_update, get_spread_object, destroy_component, assign, tick } from "./chunks/index-21dc824a.js";
-import { writable } from "./chunks/index-eb09cf72.js";
+import { SvelteComponent, init as init$1, safe_not_equal, element, claim_element, children, detach, attr, set_style, insert_hydration, text, claim_text, set_data, space, empty, claim_space, group_outros, transition_out, check_outros, transition_in, setContext, afterUpdate, onMount, construct_svelte_component, create_component, claim_component, mount_component, get_spread_update, get_spread_object, destroy_component, assign, tick } from "./chunks/index-a0c48bbc.js";
+import { writable } from "./chunks/index-da6d7e51.js";
 let base$1 = "";
 let assets = "";
 function set_paths(paths) {
@@ -51,7 +51,7 @@ function create_else_block_1(ctx) {
     return { props: switch_instance_props };
   }
   if (switch_value) {
-    switch_instance = new switch_value(switch_props());
+    switch_instance = construct_svelte_component(switch_value, switch_props());
   }
   return {
     c() {
@@ -65,9 +65,8 @@ function create_else_block_1(ctx) {
       switch_instance_anchor = empty();
     },
     m(target, anchor) {
-      if (switch_instance) {
+      if (switch_instance)
         mount_component(switch_instance, target, anchor);
-      }
       insert_hydration(target, switch_instance_anchor, anchor);
       current = true;
     },
@@ -83,7 +82,7 @@ function create_else_block_1(ctx) {
           check_outros();
         }
         if (switch_value) {
-          switch_instance = new switch_value(switch_props());
+          switch_instance = construct_svelte_component(switch_value, switch_props());
           create_component(switch_instance.$$.fragment);
           transition_in(switch_instance.$$.fragment, 1);
           mount_component(switch_instance, switch_instance_anchor.parentNode, switch_instance_anchor);
@@ -131,7 +130,7 @@ function create_if_block_2(ctx) {
     return { props: switch_instance_props };
   }
   if (switch_value) {
-    switch_instance = new switch_value(switch_props(ctx));
+    switch_instance = construct_svelte_component(switch_value, switch_props(ctx));
   }
   return {
     c() {
@@ -145,9 +144,8 @@ function create_if_block_2(ctx) {
       switch_instance_anchor = empty();
     },
     m(target, anchor) {
-      if (switch_instance) {
+      if (switch_instance)
         mount_component(switch_instance, target, anchor);
-      }
       insert_hydration(target, switch_instance_anchor, anchor);
       current = true;
     },
@@ -166,7 +164,7 @@ function create_if_block_2(ctx) {
           check_outros();
         }
         if (switch_value) {
-          switch_instance = new switch_value(switch_props(ctx2));
+          switch_instance = construct_svelte_component(switch_value, switch_props(ctx2));
           create_component(switch_instance.$$.fragment);
           transition_in(switch_instance.$$.fragment, 1);
           mount_component(switch_instance, switch_instance_anchor.parentNode, switch_instance_anchor);
@@ -211,7 +209,7 @@ function create_else_block(ctx) {
     return { props: switch_instance_props };
   }
   if (switch_value) {
-    switch_instance = new switch_value(switch_props());
+    switch_instance = construct_svelte_component(switch_value, switch_props());
   }
   return {
     c() {
@@ -225,9 +223,8 @@ function create_else_block(ctx) {
       switch_instance_anchor = empty();
     },
     m(target, anchor) {
-      if (switch_instance) {
+      if (switch_instance)
         mount_component(switch_instance, target, anchor);
-      }
       insert_hydration(target, switch_instance_anchor, anchor);
       current = true;
     },
@@ -243,7 +240,7 @@ function create_else_block(ctx) {
           check_outros();
         }
         if (switch_value) {
-          switch_instance = new switch_value(switch_props());
+          switch_instance = construct_svelte_component(switch_value, switch_props());
           create_component(switch_instance.$$.fragment);
           transition_in(switch_instance.$$.fragment, 1);
           mount_component(switch_instance, switch_instance_anchor.parentNode, switch_instance_anchor);
@@ -291,7 +288,7 @@ function create_if_block_3(ctx) {
     return { props: switch_instance_props };
   }
   if (switch_value) {
-    switch_instance = new switch_value(switch_props(ctx));
+    switch_instance = construct_svelte_component(switch_value, switch_props(ctx));
   }
   return {
     c() {
@@ -305,9 +302,8 @@ function create_if_block_3(ctx) {
       switch_instance_anchor = empty();
     },
     m(target, anchor) {
-      if (switch_instance) {
+      if (switch_instance)
         mount_component(switch_instance, target, anchor);
-      }
       insert_hydration(target, switch_instance_anchor, anchor);
       current = true;
     },
@@ -326,7 +322,7 @@ function create_if_block_3(ctx) {
           check_outros();
         }
         if (switch_value) {
-          switch_instance = new switch_value(switch_props(ctx2));
+          switch_instance = construct_svelte_component(switch_value, switch_props(ctx2));
           create_component(switch_instance.$$.fragment);
           transition_in(switch_instance.$$.fragment, 1);
           mount_component(switch_instance, switch_instance_anchor.parentNode, switch_instance_anchor);
@@ -371,7 +367,7 @@ function create_default_slot_1(ctx) {
     return { props: switch_instance_props };
   }
   if (switch_value) {
-    switch_instance = new switch_value(switch_props());
+    switch_instance = construct_svelte_component(switch_value, switch_props());
   }
   return {
     c() {
@@ -385,9 +381,8 @@ function create_default_slot_1(ctx) {
       switch_instance_anchor = empty();
     },
     m(target, anchor) {
-      if (switch_instance) {
+      if (switch_instance)
         mount_component(switch_instance, target, anchor);
-      }
       insert_hydration(target, switch_instance_anchor, anchor);
       current = true;
     },
@@ -403,7 +398,7 @@ function create_default_slot_1(ctx) {
           check_outros();
         }
         if (switch_value) {
-          switch_instance = new switch_value(switch_props());
+          switch_instance = construct_svelte_component(switch_value, switch_props());
           create_component(switch_instance.$$.fragment);
           transition_in(switch_instance.$$.fragment, 1);
           mount_component(switch_instance, switch_instance_anchor.parentNode, switch_instance_anchor);
@@ -772,9 +767,9 @@ const __vitePreload = function preload(baseModule, deps) {
 };
 const matchers = {};
 const components = [
-  () => __vitePreload(() => import("./pages/__layout.svelte-c7f7fbc0.js"), true ? ["pages/__layout.svelte-c7f7fbc0.js","assets/pages/__layout.svelte-ec595e4a.css","chunks/index-21dc824a.js"] : void 0),
-  () => __vitePreload(() => import("./error.svelte-13a33194.js"), true ? ["error.svelte-13a33194.js","chunks/index-21dc824a.js"] : void 0),
-  () => __vitePreload(() => import("./pages/index.svelte-247866d0.js"), true ? ["pages/index.svelte-247866d0.js","assets/pages/index.svelte-b492f156.css","chunks/index-21dc824a.js","chunks/index-eb09cf72.js"] : void 0)
+  () => __vitePreload(() => import("./pages/__layout.svelte-7dfbfbc2.js"), true ? ["pages/__layout.svelte-7dfbfbc2.js","assets/pages/__layout.svelte-ec595e4a.css","chunks/index-a0c48bbc.js"] : void 0),
+  () => __vitePreload(() => import("./error.svelte-2d690fde.js"), true ? ["error.svelte-2d690fde.js","chunks/index-a0c48bbc.js"] : void 0),
+  () => __vitePreload(() => import("./pages/index.svelte-8a0e77d4.js"), true ? ["pages/index.svelte-8a0e77d4.js","assets/pages/index.svelte-b492f156.css","chunks/index-a0c48bbc.js","chunks/index-da6d7e51.js"] : void 0)
 ];
 const dictionary = {
   "": [[0, 2], [1]]
@@ -883,7 +878,7 @@ function notifiable_store(value) {
 }
 function create_updated_store() {
   const { set, subscribe } = writable(false);
-  const initial = "1669421371185";
+  const initial = "1669421752848";
   let timeout;
   async function check() {
     clearTimeout(timeout);
@@ -1874,4 +1869,4 @@ async function start({ paths, target, session, route, spa, trailing_slash, hydra
   dispatchEvent(new CustomEvent("sveltekit:start"));
 }
 export { start };
-//# sourceMappingURL=start-bc7804a7.js.map
+//# sourceMappingURL=start-fb1f0f76.js.map
