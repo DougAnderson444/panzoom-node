@@ -112,7 +112,9 @@ export default class PinchZoom {
 
 		// Watch for pointers (nodes[i] as HTMLElement)
 		this._pointerTracker = new PointerTracker(this._parentEl, {
-			eventListenerOptions: { capture: true }, // catch the event before it goes to child in the DOM tree
+			eventListenerOptions: {
+				capture: false // catch the event before it goes to child in the DOM tree ?
+			},
 			start: (pointer, event) => {
 				// ignore single pointers on input / editable elements
 				if (
