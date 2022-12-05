@@ -8,6 +8,7 @@ Zero dependencies. Use as vanilla JS or add this as a Svelte action directive to
 - [x] Mobile
 - [x] Pinch to Zoom over DOM tree children
 - [x] Ignore single pointer input and editable elements
+- [x] Disable pan on select event targets via `data-no-pan` dataset
 - [ ] Drag by handle only (TODO: WIP)
 
 ![Demo](svelte-zoom-action.gif)
@@ -39,6 +40,7 @@ REPL is [https://svelte.dev/repl/9a9571ea3590430690d3a0c809bb7eb3](https://svelt
 
 	<div class="zoomable" use:pzoom={{panAnywhere: true}}>
 		Scroll on me. Pan anywhere on child elements if panAnywhere is true.
+		<div data-no-pan>Add data-no-pan if you want to click and disable panning on an element</div>
 	</div>
 
 </div>

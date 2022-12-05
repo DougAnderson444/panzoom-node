@@ -23,7 +23,10 @@ export const pzoom = (node, params) => {
 	return {
 		update(params) {
 			// the value of `bar` has changed
-			new pinchZoom(node as HTMLElement, { handle: params?.handle });
+			new pinchZoom(node as HTMLElement, {
+				handle: params?.handle,
+				panAnywhere: params?.panAnywhere
+			});
 		},
 
 		destroy() {

@@ -129,6 +129,9 @@ export default class PinchZoom {
 					// there already exists 2 pointers, and now this would have been the 3rd pointer so let's stop here
 					return false;
 
+				// if a parent contains dataset data-no-pan, then don't pan
+				if (event.target.closest('[data-no-pan]')) return false;
+
 				if (this._pointerTracker.currentPointers.length === 1) {
 					// there already exists one pointer, and now this is the second pointer
 					// then it's a pinch zoom and can be from anywhere, incl if the pointer is over a DOM tree child
