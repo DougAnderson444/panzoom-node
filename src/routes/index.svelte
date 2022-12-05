@@ -91,7 +91,12 @@
 
 		<div>Style: {style}</div>
 	</div>
-	<div class="zoomable flexbox" bind:this={zoomable} use:pzoom on:zoomed={handleZoom}>
+	<div
+		class="zoomable flexbox"
+		bind:this={zoomable}
+		use:pzoom={{ panAnywhere: true }}
+		on:zoomed={handleZoom}
+	>
 		{#if container}
 			<div class="grid">
 				{#each grid as col, x}

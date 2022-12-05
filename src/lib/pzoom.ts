@@ -18,7 +18,7 @@ export const pzoom = (node, params) => {
 	// node.style['transform-origin'] = '0 0';
 	// node.style['will-change'] = 'transform';
 
-	new pinchZoom(node as HTMLElement, { handle: params?.handle });
+	new pinchZoom(node as HTMLElement, { handle: params?.handle, panAnywhere: params?.panAnywhere });
 
 	return {
 		update(params) {

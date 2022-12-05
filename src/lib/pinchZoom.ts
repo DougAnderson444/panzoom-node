@@ -97,7 +97,10 @@ export default class PinchZoom {
 	/**
 	 * handle - an optional handle element to grab by
 	 */
-	constructor(node: HTMLElement, { handle }: { handle?: HTMLElement | null } = {}) {
+	constructor(
+		node: HTMLElement,
+		{ panAnywhere, handle }: { handle?: HTMLElement | null; panAnywhere?: boolean } = {}
+	) {
 		this._node = node;
 		this._parentEl = this._node.parentElement || document.body;
 		this._handle = handle;
@@ -146,11 +149,13 @@ export default class PinchZoom {
 				return false;
 			},
 			move: (previousPointers, changedPointers, event) => {
+				console.log('move', panAnywhere);
 				// tracking purposes only, no action
 				if (this._pointerTracker.currentPointers.length === 0) return;
 
 				// If it's a single pointer in a child, ignore it, unless it's a handle
 				if (
+					!panAnywhere &&
 					this._pointerTracker.currentPointers.length === 1 &&
 					!(event.target == this._parentEl || event.target == node)
 				)

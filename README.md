@@ -37,8 +37,8 @@ REPL is [https://svelte.dev/repl/9a9571ea3590430690d3a0c809bb7eb3](https://svelt
 
 	Pan in me.
 
-	<div class="zoomable" use:pzoom>
-		Scroll on me.
+	<div class="zoomable" use:pzoom={{panAnywhere: true}}>
+		Scroll on me. Pan anywhere on child elements if panAnywhere is true.
 	</div>
 
 </div>
