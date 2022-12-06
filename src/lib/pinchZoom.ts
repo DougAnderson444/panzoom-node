@@ -147,14 +147,14 @@ export default class PinchZoom {
 					// so event.target has to be on this node or it's parent to pan everybody
 
 					// track this single pointer in case a second one gets added
-					// but don't block it's use by children, yet
+					event.preventDefault();
+					event.stopPropagation();
 					return true;
 				}
 				// else, the pointer event must have happened on a child node, where pan doesn't apply
 				return false;
 			},
 			move: (previousPointers, changedPointers, event) => {
-				console.log('move', panAnywhere);
 				// tracking purposes only, no action
 				if (this._pointerTracker.currentPointers.length === 0) return;
 
@@ -168,6 +168,7 @@ export default class PinchZoom {
 
 				// pan if single pointer on parent container or target node
 				// zoom if double pointer anywhere
+				event.preventDefault();
 				event.stopPropagation(); // continue exclusive rights over the pointer from DOM tree
 				this._onPointerMove(previousPointers, this._pointerTracker.currentPointers);
 			},
