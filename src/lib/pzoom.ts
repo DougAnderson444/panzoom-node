@@ -13,6 +13,8 @@ export const pzoom = (node, params) => {
 	node.style['touch-action'] = 'none';
 	node.style['user-select'] = 'none';
 	node.style['position'] = 'absolute';
+	node.style.width = '100%'; // makes the transfrom origin the same
+	node.style.height = '100%'; // otherwise the origin will be off, and I dont know yet how to correct for that
 
 	// node.style['transform'] = 'translate(var(--x), var(--y)) scale(var(--scale))';
 	// node.style['transform-origin'] = '0 0';
@@ -22,6 +24,30 @@ export const pzoom = (node, params) => {
 		handle: params?.handle,
 		panAnywhere: params?.panAnywhere
 	});
+
+	// listen on node HTMLElement
+	node.addEventListener('home', handleScaleToHome);
+	node.addEventListener('scaleTo', handleScaleTo);
+
+	function handleScaleTo(val) {
+		zoomer.scaleTo(val, { allowChangeEvent: true });
+	}
+
+	function handleScaleToHome(e) {
+		// zoomer.scaleTo(1, { allowChangeEvent: true });
+		zoomer.setTransform({ x: 0, y: 0, scale: 1, allowChangeEvent: true });
+	}
+
+	function handleScaleChange(e) {
+		const scale = e.target.style.transform.match(/scale\((\d+\.?\d*)\)/)[1];
+		node.dispatchEvent(
+			new CustomEvent('scale', {
+				detail: { scale }
+			})
+		);
+	}
+
+	node.addEventListener('change', handleScaleChange);
 
 	return {
 		update(params) {
@@ -36,6 +62,12 @@ export const pzoom = (node, params) => {
 		destroy() {
 			// the node has been removed from the DOM
 			zoomer.destroy();
+			// remove scaleTo event listener
+			node.removeEventListener('home', handleScaleToHome);
+			// remove scale event listener
+			node.removeEventListener('change', handleScaleChange);
+			// remove scaleTo event listener
+			node.removeEventListener('scaleTo', handleScaleTo);
 		}
 	};
 };
