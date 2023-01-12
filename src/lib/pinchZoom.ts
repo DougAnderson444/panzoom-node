@@ -178,6 +178,10 @@ export default class PinchZoom {
 		this._parentEl.addEventListener('wheel', (event) => this._onWheel(event));
 	}
 
+	destroy() {
+		this._pointerTracker.stop();
+	}
+
 	attributeChangedCallback(name: string, oldValue: string, newValue: string) {
 		if (name === minScaleAttr) {
 			if (this.scale < this.minScale) {

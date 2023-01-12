@@ -18,12 +18,16 @@ export const pzoom = (node, params) => {
 	// node.style['transform-origin'] = '0 0';
 	// node.style['will-change'] = 'transform';
 
-	new pinchZoom(node as HTMLElement, { handle: params?.handle, panAnywhere: params?.panAnywhere });
+	let zoomer = new pinchZoom(node as HTMLElement, {
+		handle: params?.handle,
+		panAnywhere: params?.panAnywhere
+	});
 
 	return {
 		update(params) {
 			// the value of `bar` has changed
-			new pinchZoom(node as HTMLElement, {
+			zoomer.destroy(); // old one
+			zoomer = new pinchZoom(node as HTMLElement, {
 				handle: params?.handle,
 				panAnywhere: params?.panAnywhere
 			});
@@ -31,6 +35,7 @@ export const pzoom = (node, params) => {
 
 		destroy() {
 			// the node has been removed from the DOM
+			zoomer.destroy();
 		}
 	};
 };
