@@ -31,20 +31,30 @@ REPL is [https://svelte.dev/repl/9a9571ea3590430690d3a0c809bb7eb3](https://svelt
 
 ## Use
 
-```js
+```svelte
 <script>
- import { pzoom } from "@douganderson444/panzoom-node";
+	import { pzoom } from '@douganderson444/panzoom-node';
+
+	let zoomable;
+
+	function handleScaleChg(e) {
+		console.log('Scale is now: ', e.detail.scale);
+	}
+
+	function goHome(e) {
+		// reset to x,y = 0,0 and scale = 1 on the zoomable element
+		zoomable.dispatchEvent(new CustomEvent('home'));
+	}
 </script>
 
-<div class="parent-container" >
-
+<div class="parent-container">
 	Pan in me.
 
-	<div class="zoomable" use:pzoom={{panAnywhere: true}}>
+	<div bind:this={zoomable} use:pzoom={{ panAnywhere: true }} on:scale={handleScaleChg}>
 		Scroll on me. Pan anywhere on child elements if panAnywhere is true.
 		<div data-no-pan>Add data-no-pan if you want to click and disable panning on an element</div>
+		<button on:click={goHome}>Go Home</button>
 	</div>
-
 </div>
 ```
 

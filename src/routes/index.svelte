@@ -7,60 +7,32 @@
 	let zoomable, container;
 
 	let handle;
-
-	let style = ''; // show styling applied
-	let scale = { value: 1 };
+	let scale = 1;
 	let count = 10;
 	let min = count;
-	let manualZoom = [1];
-	// $: if (scale?.value) manualZoom = [scale.value]; // match the directive scale level
-	$: if (manualZoom) {
-		console.log({ manualZoom });
-		setZoom(manualZoom);
+	let values;
+	$: if (scale) {
+		values = [scale]; // match the directive scale level
 	}
 
-	function handleZoom(e) {
-		console.log('Zoomed.', { detail: e.detail });
-		scale = e.detail.scale;
-		style = zoomable.style.transform;
+	$: if (zoomable?.style?.transform) console.log({ zoomable: zoomable.style.transform });
+
+	function handleRangeChg(e) {
+		zoomable.dispatchEvent(new CustomEvent('scaleTo', { detail: { scale: values[0] } }));
 	}
 
 	const grid = Array.from({ length: count }, (_, i) =>
 		Array.from({ length: count }, (_, j) => ({ id: i * count + j }))
 	);
 
-	// manual zoom
-	function setZoom(val) {
-		console.log('Zoom to ', val, zoomable?.style['transform']);
-		if (!zoomable) return;
-		if (!zoomable?.style) {
-			console.log('Setting Zoom to scale only');
-			zoomable.style['transform'] = `scale(${val})`;
-			return;
-		}
-		let m;
-		let s = '';
-
-		const re = /(\w+)\(([^)]*)\)/g;
-		while ((m = re.exec(zoomable?.style['transform']))) {
-			console.log({ m });
-
-			if (m[1] == 'matrix') {
-				let piece = m[2].split(', ');
-				console.log({ piece });
-				s = `translate(${piece[4]}px, ${piece[5]}px) scale(${val})`;
-				console.log('matrixed', { s });
-				zoomable.style['transform'] = s;
-				return;
-			} else if (m[1] == 'scale') {
-				s += ` scale(${val})`;
-			} else {
-				s += m[0];
-			}
-		}
-		console.log({ s });
-		zoomable.style['transform'] = s;
+	function goHome(e) {
+		// dispatch custom event to zoomable element
+		zoomable.dispatchEvent(new CustomEvent('home'));
 	}
+	const handleScaleChg = (e) => {
+		scale = e.detail.scale;
+		console.log('scale changed', scale);
+	};
 </script>
 
 <div>
@@ -74,28 +46,28 @@
 <div class="container" bind:this={container}>
 	<div class="menu">
 		<div>
-			Zoom Level: {scale.value.toFixed(5)} || {JSON.stringify(manualZoom)}
-			{#if manualZoom}
-				<div>
+			<button on:click={goHome}>Reset Zoom</button>
+			<br />Zoom Level: {scale}
+			<!-- {#if values?.length}
+				<div data-no-pan>
 					<RangeSlider
 						pips
-						min={0.5}
-						step={0.5}
+						min={0.1}
+						step={0.1}
 						max={scale?.max || 20}
 						float
-						bind:values={manualZoom}
+						bind:values
+						on:change={handleRangeChg}
 					/>
 				</div>
-			{/if}
+			{/if} -->
 		</div>
-
-		<div>Style: {style}</div>
 	</div>
 	<div
 		class="zoomable flexbox"
 		bind:this={zoomable}
 		use:pzoom={{ panAnywhere: true }}
-		on:zoomed={handleZoom}
+		on:scale={handleScaleChg}
 	>
 		{#if container}
 			<div class="grid">
@@ -151,8 +123,8 @@
 	}
 	.zoomable {
 		border: 4px dashed blue;
-		height: 100%;
-		width: 100%;
+		height: 50%;
+		width: 50%;
 		/* margin: 1em; */
 		/* position: relative; its set by the directive :) */
 	}
@@ -182,6 +154,7 @@
 		position: absolute;
 		top: 10px;
 		left: 10px;
+		width: 400px;
 		margin: 0.1em;
 		padding: 2em;
 		z-index: 10;
