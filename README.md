@@ -1,5 +1,7 @@
 # HTML Node Element Zoom, available as a Svelte Directive
 
+[Demo](https://douganderson444.github.io/panzoom-node/)
+
 Zero dependencies. Use as vanilla JS or add this as a Svelte action directive to the node you want to zoom in on. Not just images... _any_ html elements.
 
 - [x] Pinch
@@ -11,7 +13,7 @@ Zero dependencies. Use as vanilla JS or add this as a Svelte action directive to
 - [x] Disable pan on select event targets via `data-no-pan` dataset
 - [ ] Drag by handle only (TODO: WIP)
 
-![Demo](svelte-zoom-action.gif)
+![Demo](./static/svelte-zoom-action.gif)
 
 ## As Svelte Action Directives
 
