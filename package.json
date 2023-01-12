@@ -37,5 +37,10 @@
 	],
 	"dependencies": {
 		"@douganderson444/pointer-tracker": "github:DougAnderson444/pointer-tracker"
-	}
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/DougAnderson444/panzoom-node.git"
+	},
+	"readme": "https://github.com/DougAnderson444/panzoom-node"
 }
