@@ -28,6 +28,8 @@ export const pzoom = (node, params) => {
 	// listen on node HTMLElement
 	node.addEventListener('home', handleScaleToHome);
 	node.addEventListener('scaleTo', handleScaleTo);
+	node.addEventListener('change', handleScaleChange);
+	node.addEventListener('setTransform', handleSetTransform);
 
 	function handleScaleTo(val) {
 		zoomer.scaleTo(val, { allowChangeEvent: true });
@@ -38,6 +40,15 @@ export const pzoom = (node, params) => {
 		zoomer.setTransform({ x: 0, y: 0, scale: 1, allowChangeEvent: true });
 	}
 
+	function handleSetTransform(e) {
+		zoomer.setTransform({
+			x: e.detail.x || 0,
+			y: e.detail.y || 0,
+			scale: e.detail.scale || 1,
+			allowChangeEvent: true
+		});
+	}
+
 	function handleScaleChange(e) {
 		const scale = e.target.style.transform.match(/scale\((\d+\.?\d*)\)/)[1];
 		node.dispatchEvent(
@@ -46,8 +57,6 @@ export const pzoom = (node, params) => {
 			})
 		);
 	}
-
-	node.addEventListener('change', handleScaleChange);
 
 	return {
 		update(params) {
@@ -68,6 +77,8 @@ export const pzoom = (node, params) => {
 			node.removeEventListener('change', handleScaleChange);
 			// remove scaleTo event listener
 			node.removeEventListener('scaleTo', handleScaleTo);
+			// remove setTransform event listener
+			node.removeEventListener('setTransform', handleSetTransform);
 		}
 	};
 };
