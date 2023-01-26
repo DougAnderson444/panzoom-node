@@ -1,4 +1,5 @@
-import { SvelteComponent, init, safe_not_equal, element, claim_element, children, detach, set_style, attr, insert_hydration, noop as noop$1, transition_in, space, claim_space, append_hydration, create_component, claim_component, mount_component, transition_out, destroy_component, check_outros, destroy_each, text, claim_text, listen, action_destroyer, set_data, is_function, run_all, group_outros, binding_callbacks } from "../chunks/index-14381ffc.js";
+import { assign, now, loop, identity, SvelteComponent, init, safe_not_equal, element, claim_element, children, detach, set_style, attr, insert_hydration, noop as noop$1, transition_in, space, claim_space, append_hydration, create_component, claim_component, mount_component, transition_out, destroy_component, check_outros, destroy_each, text, claim_text, listen, action_destroyer, set_data, is_function, run_all, group_outros, binding_callbacks } from "../chunks/index-733da33f.js";
+import { writable } from "../chunks/index-26ddef22.js";
 class Pointer {
   constructor(nativePointer) {
     this.id = -1;
@@ -197,22 +198,20 @@ class PinchZoom {
           return false;
         if (event.target.closest("[data-no-pan]"))
           return false;
-        if (this._pointerTracker.currentPointers.length === 1) {
-          event.preventDefault();
-          event.stopPropagation();
-          return true;
+        if (this._pointerTracker.currentPointers.length > 1) {
+          return false;
         }
-        if (this._pointerTracker.currentPointers.length === 0) {
-          event.preventDefault();
-          event.stopPropagation();
-          return true;
-        }
-        return false;
+        event.preventDefault();
+        event.stopPropagation();
+        return true;
       },
       move: (previousPointers, changedPointers, event) => {
+        var _a;
         if (this._pointerTracker.currentPointers.length === 0)
           return;
-        if (!panAnywhere && this._pointerTracker.currentPointers.length === 1 && !(event.target == this._parentEl || event.target == node))
+        if (!panAnywhere && !this._handle && this._pointerTracker.currentPointers.length === 1 && !(event.target == this._parentEl || event.target == node))
+          return;
+        if (this._handle && !((_a = this._handle) == null ? void 0 : _a.contains(event.target)) && this._pointerTracker.currentPointers.length == 1)
           return;
         event.preventDefault();
         event.stopPropagation();
@@ -386,7 +385,6 @@ class PinchZoom {
   }
 }
 const pzoom = (node, params) => {
-  console.log({ params });
   let container = node.parentElement || document.body;
   container.style["touch-action"] = "none";
   container.style["user-select"] = "none";
@@ -442,6 +440,105 @@ const pzoom = (node, params) => {
     }
   };
 };
+function quintOut(t) {
+  return --t * t * t * t * t + 1;
+}
+function is_date(obj) {
+  return Object.prototype.toString.call(obj) === "[object Date]";
+}
+function get_interpolator(a, b) {
+  if (a === b || a !== a)
+    return () => a;
+  const type = typeof a;
+  if (type !== typeof b || Array.isArray(a) !== Array.isArray(b)) {
+    throw new Error("Cannot interpolate values of different type");
+  }
+  if (Array.isArray(a)) {
+    const arr = b.map((bi, i) => {
+      return get_interpolator(a[i], bi);
+    });
+    return (t) => arr.map((fn) => fn(t));
+  }
+  if (type === "object") {
+    if (!a || !b)
+      throw new Error("Object cannot be null");
+    if (is_date(a) && is_date(b)) {
+      a = a.getTime();
+      b = b.getTime();
+      const delta = b - a;
+      return (t) => new Date(a + t * delta);
+    }
+    const keys = Object.keys(b);
+    const interpolators = {};
+    keys.forEach((key) => {
+      interpolators[key] = get_interpolator(a[key], b[key]);
+    });
+    return (t) => {
+      const result = {};
+      keys.forEach((key) => {
+        result[key] = interpolators[key](t);
+      });
+      return result;
+    };
+  }
+  if (type === "number") {
+    const delta = b - a;
+    return (t) => a + t * delta;
+  }
+  throw new Error(`Cannot interpolate ${type} values`);
+}
+function tweened(value, defaults = {}) {
+  const store = writable(value);
+  let task;
+  let target_value = value;
+  function set(new_value, opts) {
+    if (value == null) {
+      store.set(value = new_value);
+      return Promise.resolve();
+    }
+    target_value = new_value;
+    let previous_task = task;
+    let started = false;
+    let { delay = 0, duration = 400, easing = identity, interpolate = get_interpolator } = assign(assign({}, defaults), opts);
+    if (duration === 0) {
+      if (previous_task) {
+        previous_task.abort();
+        previous_task = null;
+      }
+      store.set(value = target_value);
+      return Promise.resolve();
+    }
+    const start = now() + delay;
+    let fn;
+    task = loop((now2) => {
+      if (now2 < start)
+        return true;
+      if (!started) {
+        fn = interpolate(value, new_value);
+        if (typeof duration === "function")
+          duration = duration(value, new_value);
+        started = true;
+      }
+      if (previous_task) {
+        previous_task.abort();
+        previous_task = null;
+      }
+      const elapsed = now2 - start;
+      if (elapsed > duration) {
+        store.set(value = new_value);
+        return false;
+      }
+      store.set(value = fn(easing(elapsed / duration)));
+      return true;
+    });
+    return task.promise;
+  }
+  return {
+    set,
+    update: (fn, opts) => set(fn(target_value, value), opts),
+    subscribe: store.subscribe
+  };
+}
 var Spot_svelte_svelte_type_style_lang = "";
 function create_fragment$1(ctx) {
   let div;
@@ -500,8 +597,6 @@ class Spot extends SvelteComponent {
     init(this, options, instance$1, create_fragment$1, safe_not_equal, { left: 0, top: 1 });
   }
 }
-var RangePips_svelte_svelte_type_style_lang = "";
-var RangeSlider_svelte_svelte_type_style_lang = "";
 var index_svelte_svelte_type_style_lang = "";
 function get_each_context(ctx, list, i) {
   const child_ctx = ctx.slice();
@@ -518,7 +613,7 @@ function get_each_context_1(ctx, list, i) {
 function create_if_block(ctx) {
   let div;
   let current;
-  let each_value = ctx[5];
+  let each_value = ctx[6];
   let each_blocks = [];
   for (let i = 0; i < each_value.length; i += 1) {
     each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
@@ -554,8 +649,8 @@ function create_if_block(ctx) {
       current = true;
     },
     p(ctx2, dirty) {
-      if (dirty & 52) {
-        each_value = ctx2[5];
+      if (dirty & 104) {
+        each_value = ctx2[6];
         let i;
         for (i = 0; i < each_value.length; i += 1) {
           const child_ctx = get_each_context(ctx2, each_value, i);
@@ -603,8 +698,8 @@ function create_each_block_1(ctx) {
   let current;
   spot = new Spot({
     props: {
-      left: ctx[4] + ctx[15] * ctx[2].offsetWidth / count,
-      top: ctx[4] + ctx[18] * ctx[2].offsetWidth / count
+      left: ctx[5] + ctx[15] * ctx[3].offsetWidth / count,
+      top: ctx[5] + ctx[18] * ctx[3].offsetWidth / count
     }
   });
   return {
@@ -620,10 +715,10 @@ function create_each_block_1(ctx) {
     },
     p(ctx2, dirty) {
       const spot_changes = {};
-      if (dirty & 4)
-        spot_changes.left = ctx2[4] + ctx2[15] * ctx2[2].offsetWidth / count;
-      if (dirty & 4)
-        spot_changes.top = ctx2[4] + ctx2[18] * ctx2[2].offsetWidth / count;
+      if (dirty & 8)
+        spot_changes.left = ctx2[5] + ctx2[15] * ctx2[3].offsetWidth / count;
+      if (dirty & 8)
+        spot_changes.top = ctx2[5] + ctx2[18] * ctx2[3].offsetWidth / count;
       spot.$set(spot_changes);
     },
     i(local) {
@@ -684,7 +779,7 @@ function create_each_block(ctx) {
       current = true;
     },
     p(ctx2, dirty) {
-      if (dirty & 20) {
+      if (dirty & 40) {
         each_value_1 = ctx2[13];
         let i;
         for (i = 0; i < each_value_1.length; i += 1) {
@@ -762,12 +857,13 @@ function create_fragment(ctx) {
   let div5;
   let t16;
   let span;
+  let b;
   let t17;
   let pzoom_action_1;
   let current;
   let mounted;
   let dispose;
-  let if_block = ctx[2] && create_if_block(ctx);
+  let if_block = ctx[3] && create_if_block(ctx);
   return {
     c() {
       div0 = element("div");
@@ -791,20 +887,21 @@ function create_fragment(ctx) {
       t9 = space();
       br = element("br");
       t10 = text("Zoom Level: ");
-      t11 = text(ctx[1]);
+      t11 = text(ctx[2]);
       t12 = space();
       div3 = element("div");
       if (if_block)
         if_block.c();
       t13 = space();
       h21 = element("h2");
-      t14 = text("Using Handle (WIP)");
+      t14 = text('Using Handle (can only pan by dragging on the word "Handle")');
       t15 = space();
       div7 = element("div");
       div6 = element("div");
       div5 = element("div");
       t16 = text("Drag me by my handle:\n			");
       span = element("span");
+      b = element("b");
       t17 = text("Handle");
       this.h();
     },
@@ -845,7 +942,7 @@ function create_fragment(ctx) {
       t9 = claim_space(div1_nodes);
       br = claim_element(div1_nodes, "BR", {});
       t10 = claim_text(div1_nodes, "Zoom Level: ");
-      t11 = claim_text(div1_nodes, ctx[1]);
+      t11 = claim_text(div1_nodes, ctx[2]);
       div1_nodes.forEach(detach);
       div2_nodes.forEach(detach);
       t12 = claim_space(div4_nodes);
@@ -858,19 +955,22 @@ function create_fragment(ctx) {
       t13 = claim_space(nodes);
       h21 = claim_element(nodes, "H2", {});
       var h21_nodes = children(h21);
-      t14 = claim_text(h21_nodes, "Using Handle (WIP)");
+      t14 = claim_text(h21_nodes, 'Using Handle (can only pan by dragging on the word "Handle")');
       h21_nodes.forEach(detach);
       t15 = claim_space(nodes);
       div7 = claim_element(nodes, "DIV", { style: true });
       var div7_nodes = children(div7);
-      div6 = claim_element(div7_nodes, "DIV", { style: true });
+      div6 = claim_element(div7_nodes, "DIV", {});
       var div6_nodes = children(div6);
       div5 = claim_element(div6_nodes, "DIV", { style: true });
       var div5_nodes = children(div5);
       t16 = claim_text(div5_nodes, "Drag me by my handle:\n			");
       span = claim_element(div5_nodes, "SPAN", {});
       var span_nodes = children(span);
-      t17 = claim_text(span_nodes, "Handle");
+      b = claim_element(span_nodes, "B", {});
+      var b_nodes = children(b);
+      t17 = claim_text(b_nodes, "Handle");
+      b_nodes.forEach(detach);
       span_nodes.forEach(detach);
       div5_nodes.forEach(detach);
       div6_nodes.forEach(detach);
@@ -888,15 +988,15 @@ function create_fragment(ctx) {
       set_style(div5, "-moz-border-radius", "8px");
       set_style(div5, "border-radius", "8px");
       set_style(div5, "background-color", "rgba(250, 128, 114, 0.418)");
-      set_style(div5, "width", "200px");
-      set_style(div5, "height", "200px");
+      set_style(div5, "width", "100px");
+      set_style(div5, "height", "100px");
       set_style(div5, "padding", "1em");
       set_style(div5, "left", "100px");
       set_style(div5, "top", "10px");
-      set_style(div6, "height", "600px");
-      set_style(div6, "width", "600px");
-      set_style(div6, "border", "1px solid salmon");
       set_style(div7, "height", "600px");
+      set_style(div7, "width", "600px");
+      set_style(div7, "margin", "1em");
+      set_style(div7, "border", "4px solid salmon");
     },
     m(target, anchor) {
       insert_hydration(target, div0, anchor);
@@ -936,26 +1036,27 @@ function create_fragment(ctx) {
       append_hydration(div6, div5);
       append_hydration(div5, t16);
       append_hydration(div5, span);
-      append_hydration(span, t17);
+      append_hydration(span, b);
+      append_hydration(b, t17);
       ctx[10](span);
       current = true;
       if (!mounted) {
         dispose = [
-          listen(button, "click", ctx[6]),
+          listen(button, "click", ctx[0]),
           action_destroyer(pzoom.call(null, div3, { panAnywhere: true })),
           listen(div3, "scale", ctx[7]),
-          action_destroyer(pzoom_action_1 = pzoom.call(null, div5, { handle: ctx[3] }))
+          action_destroyer(pzoom_action_1 = pzoom.call(null, div6, { handle: ctx[4] }))
         ];
         mounted = true;
       }
     },
     p(ctx2, [dirty]) {
-      if (!current || dirty & 2)
-        set_data(t11, ctx2[1]);
-      if (ctx2[2]) {
+      if (!current || dirty & 4)
+        set_data(t11, ctx2[2]);
+      if (ctx2[3]) {
         if (if_block) {
           if_block.p(ctx2, dirty);
-          if (dirty & 4) {
+          if (dirty & 8) {
             transition_in(if_block, 1);
           }
         } else {
@@ -971,8 +1072,8 @@ function create_fragment(ctx) {
         });
         check_outros();
       }
-      if (pzoom_action_1 && is_function(pzoom_action_1.update) && dirty & 8)
-        pzoom_action_1.update.call(null, { handle: ctx2[3] });
+      if (pzoom_action_1 && is_function(pzoom_action_1.update) && dirty & 16)
+        pzoom_action_1.update.call(null, { handle: ctx2[4] });
     },
     i(local) {
       if (current)
@@ -1016,48 +1117,54 @@ function instance($$self, $$props, $$invalidate) {
   let scale = 1;
   let min = count;
   const grid = Array.from({ length: count }, (_, i) => Array.from({ length: count }, (_2, j) => ({ id: i * count + j })));
-  function goHome(e) {
-    zoomable.dispatchEvent(new CustomEvent("home"));
-  }
+  const getCoords = (e) => zoomable.style.transform.replace(/px/g, "").match(/[-+]?([0-9]*\.[0-9]+|[0-9]+)/g);
+  const goHome = () => {
+    const [x, y, s] = getCoords();
+    let view = tweened({ x: +x, y: +y, s: +s }, { duration: 750, easing: quintOut });
+    view.subscribe(async (v) => {
+      zoomable.dispatchEvent(new CustomEvent("setTransform", { detail: { scale: v.s, x: v.x, y: v.y } }));
+    });
+    view.set({ x: 0, y: 0, s: 1 });
+  };
   const handleScaleChg = (e) => {
-    $$invalidate(1, scale = e.detail.scale);
+    $$invalidate(2, scale = e.detail.scale);
     console.log("scale changed", scale);
   };
   function div3_binding($$value) {
     binding_callbacks[$$value ? "unshift" : "push"](() => {
       zoomable = $$value;
-      $$invalidate(0, zoomable);
+      $$invalidate(1, zoomable);
     });
   }
   function div4_binding($$value) {
     binding_callbacks[$$value ? "unshift" : "push"](() => {
       container = $$value;
-      $$invalidate(2, container);
+      $$invalidate(3, container);
     });
   }
   function span_binding($$value) {
     binding_callbacks[$$value ? "unshift" : "push"](() => {
       handle = $$value;
-      $$invalidate(3, handle);
+      $$invalidate(4, handle);
     });
   }
   $$self.$$.update = () => {
     var _a;
-    if ($$self.$$.dirty & 2)
+    if ($$self.$$.dirty & 4)
       ;
-    if ($$self.$$.dirty & 1) {
+    if ($$self.$$.dirty & 2) {
       if ((_a = zoomable == null ? void 0 : zoomable.style) == null ? void 0 : _a.transform)
         console.log({ zoomable: zoomable.style.transform });
     }
   };
   return [
+    goHome,
     zoomable,
     scale,
     container,
     handle,
     min,
     grid,
-    goHome,
     handleScaleChg,
     div3_binding,
     div4_binding,
@@ -1067,8 +1174,11 @@ function instance($$self, $$props, $$invalidate) {
 class Routes extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance, create_fragment, safe_not_equal, {});
+    init(this, options, instance, create_fragment, safe_not_equal, { goHome: 0 });
+  }
+  get goHome() {
+    return this.$$.ctx[0];
   }
 }
 export { Routes as default };
-//# sourceMappingURL=index.svelte-a61f7a53.js.map
+//# sourceMappingURL=index.svelte-9f22d5ac.js.map

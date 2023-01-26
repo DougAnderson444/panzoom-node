@@ -29,49 +29,8 @@ var __objRest = (source, exclude) => {
     }
   return target;
 };
-import { safe_not_equal, noop, SvelteComponent, init as init$1, element, claim_element, children, detach, attr, set_style, insert_hydration, text, claim_text, set_data, space, empty, claim_space, group_outros, transition_out, check_outros, transition_in, setContext, afterUpdate, onMount, construct_svelte_component, create_component, claim_component, mount_component, get_spread_update, get_spread_object, destroy_component, assign, tick } from "./chunks/index-14381ffc.js";
-const subscriber_queue = [];
-function writable(value, start2 = noop) {
-  let stop;
-  const subscribers = /* @__PURE__ */ new Set();
-  function set(new_value) {
-    if (safe_not_equal(value, new_value)) {
-      value = new_value;
-      if (stop) {
-        const run_queue = !subscriber_queue.length;
-        for (const subscriber of subscribers) {
-          subscriber[1]();
-          subscriber_queue.push(subscriber, value);
-        }
-        if (run_queue) {
-          for (let i = 0; i < subscriber_queue.length; i += 2) {
-            subscriber_queue[i][0](subscriber_queue[i + 1]);
-          }
-          subscriber_queue.length = 0;
-        }
-      }
-    }
-  }
-  function update(fn) {
-    set(fn(value));
-  }
-  function subscribe(run, invalidate = noop) {
-    const subscriber = [run, invalidate];
-    subscribers.add(subscriber);
-    if (subscribers.size === 1) {
-      stop = start2(set) || noop;
-    }
-    run(value);
-    return () => {
-      subscribers.delete(subscriber);
-      if (subscribers.size === 0) {
-        stop();
-        stop = null;
-      }
-    };
-  }
-  return { set, update, subscribe };
-}
+import { SvelteComponent, init as init$1, safe_not_equal, element, claim_element, children, detach, attr, set_style, insert_hydration, text, claim_text, set_data, space, empty, claim_space, group_outros, transition_out, check_outros, transition_in, setContext, afterUpdate, onMount, construct_svelte_component, create_component, claim_component, mount_component, get_spread_update, get_spread_object, destroy_component, assign, tick } from "./chunks/index-733da33f.js";
+import { writable } from "./chunks/index-26ddef22.js";
 let base$1 = "";
 let assets = "";
 function set_paths(paths) {
@@ -808,9 +767,9 @@ const __vitePreload = function preload(baseModule, deps) {
 };
 const matchers = {};
 const components = [
-  () => __vitePreload(() => import("./pages/__layout.svelte-b9ae8f5e.js"), true ? ["pages/__layout.svelte-b9ae8f5e.js","assets/pages/__layout.svelte-ec595e4a.css","chunks/index-14381ffc.js"] : void 0),
-  () => __vitePreload(() => import("./error.svelte-6aab97ab.js"), true ? ["error.svelte-6aab97ab.js","chunks/index-14381ffc.js"] : void 0),
-  () => __vitePreload(() => import("./pages/index.svelte-a61f7a53.js"), true ? ["pages/index.svelte-a61f7a53.js","assets/pages/index.svelte-4075b9b1.css","chunks/index-14381ffc.js"] : void 0)
+  () => __vitePreload(() => import("./pages/__layout.svelte-e2a58aab.js"), true ? ["pages/__layout.svelte-e2a58aab.js","assets/pages/__layout.svelte-ec595e4a.css","chunks/index-733da33f.js"] : void 0),
+  () => __vitePreload(() => import("./error.svelte-d7261fca.js"), true ? ["error.svelte-d7261fca.js","chunks/index-733da33f.js"] : void 0),
+  () => __vitePreload(() => import("./pages/index.svelte-9f22d5ac.js"), true ? ["pages/index.svelte-9f22d5ac.js","assets/pages/index.svelte-a922f486.css","chunks/index-733da33f.js","chunks/index-26ddef22.js"] : void 0)
 ];
 const dictionary = {
   "": [[0, 2], [1]]
@@ -919,7 +878,7 @@ function notifiable_store(value) {
 }
 function create_updated_store() {
   const { set, subscribe } = writable(false);
-  const initial = "1673613532575";
+  const initial = "1674762638276";
   let timeout;
   async function check() {
     clearTimeout(timeout);
@@ -1910,4 +1869,4 @@ async function start({ paths, target, session, route, spa, trailing_slash, hydra
   dispatchEvent(new CustomEvent("sveltekit:start"));
 }
 export { start };
-//# sourceMappingURL=start-a2250157.js.map
+//# sourceMappingURL=start-dcc08e52.js.map

@@ -1,5 +1,6 @@
 function noop() {
 }
+const identity = (x) => x;
 function assign(tar, src) {
   for (const k in src)
     tar[k] = src[k];
@@ -69,6 +70,33 @@ function get_all_dirty_from_scope($$scope) {
 }
 function action_destroyer(action_result) {
   return action_result && is_function(action_result.destroy) ? action_result.destroy : noop;
+}
+const is_client = typeof window !== "undefined";
+let now = is_client ? () => window.performance.now() : () => Date.now();
+let raf = is_client ? (cb) => requestAnimationFrame(cb) : noop;
+const tasks = /* @__PURE__ */ new Set();
+function run_tasks(now2) {
+  tasks.forEach((task) => {
+    if (!task.c(now2)) {
+      tasks.delete(task);
+      task.f();
+    }
+  });
+  if (tasks.size !== 0)
+    raf(run_tasks);
+}
+function loop(callback) {
+  let task;
+  if (tasks.size === 0)
+    raf(run_tasks);
+  return {
+    promise: new Promise((fulfill) => {
+      tasks.add(task = { c: callback, f: fulfill });
+    }),
+    abort() {
+      tasks.delete(task);
+    }
+  };
 }
 let is_hydrating = false;
 function start_hydrating() {
@@ -565,5 +593,5 @@ class SvelteComponent {
     }
   }
 }
-export { SvelteComponent, action_destroyer, afterUpdate, append_hydration, assign, attr, binding_callbacks, check_outros, children, claim_component, claim_element, claim_space, claim_text, construct_svelte_component, create_component, create_slot, destroy_component, destroy_each, detach, element, empty, get_all_dirty_from_scope, get_slot_changes, get_spread_object, get_spread_update, group_outros, init, insert_hydration, is_function, listen, mount_component, noop, onMount, run_all, safe_not_equal, setContext, set_data, set_style, space, text, tick, transition_in, transition_out, update_slot_base };
-//# sourceMappingURL=index-14381ffc.js.map
+export { SvelteComponent, action_destroyer, afterUpdate, append_hydration, assign, attr, binding_callbacks, check_outros, children, claim_component, claim_element, claim_space, claim_text, construct_svelte_component, create_component, create_slot, destroy_component, destroy_each, detach, element, empty, get_all_dirty_from_scope, get_slot_changes, get_spread_object, get_spread_update, group_outros, identity, init, insert_hydration, is_function, listen, loop, mount_component, noop, now, onMount, run_all, safe_not_equal, setContext, set_data, set_style, space, text, tick, transition_in, transition_out, update_slot_base };
+//# sourceMappingURL=index-733da33f.js.map
