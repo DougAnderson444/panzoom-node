@@ -1,8 +1,8 @@
-# HTML Node Element Zoom, available as a Svelte Directive
+# HTML Node Zoom, available as a Svelte Directive
 
 [Demo](https://douganderson444.github.io/panzoom-node/)
 
-Zero dependencies. Use as vanilla JS or add this as a Svelte action directive to the node you want to zoom in on. Not just images... _any_ html elements.
+One dependency library. Use as vanilla JS or add this as a Svelte action directive to the node you want to zoom in on. Not just images... _any_ html elements.
 
 - [x] Pinch
 - [x] Pan
@@ -48,7 +48,8 @@ REPL is [https://svelte.dev/repl/9a9571ea3590430690d3a0c809bb7eb3](https://svelt
 </script>
 
 <div class="parent-container">
-	Pan in me.
+	Pinch/Zoom/Pan in this Parent Element. If you want to pan on DOM children too, set panAnywhere to
+	true.
 
 	<div bind:this={zoomable} use:pzoom={{ panAnywhere: true }} on:scale={handleScaleChg}>
 		Scroll on me. Pan anywhere on child elements if panAnywhere is true.
@@ -76,7 +77,3 @@ pzoom(node);
 ## Zoom Container
 
 The zoomable HTML node will be contained within the parent element as a container. If no container is set, it will use the parent element as the default container, using the `<body>` as the container if there's no parent element.
-
-### Dev notes
-
-I comment out the 'svelte' field of package.json for deployment as it messes things up with the `npm run package` process?
