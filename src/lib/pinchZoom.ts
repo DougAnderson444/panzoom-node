@@ -132,37 +132,34 @@ export default class PinchZoom {
 				// if a parent contains dataset data-no-pan, then don't pan
 				if (event.target.closest('[data-no-pan]')) return false;
 
-				if (this._pointerTracker.currentPointers.length === 1) {
-					// there already exists one pointer, and now this is the second pointer
-					// then it's a pinch zoom and can be from anywhere, incl if the pointer is over a DOM tree child
-					// events on this element are captured (see eventListenerOptions above) so stopping prop means they don't go down the DOM tree
-					event.preventDefault();
-					event.stopPropagation(); // if it's a 2 touch move, we want exclusive rights over the pointer
-					return true;
+				if (this._pointerTracker.currentPointers.length > 1) {
+					// there already exists two pointers, and now this is the third pointer
+					return false;
 				}
 
-				if (this._pointerTracker.currentPointers.length === 0) {
-					// if length == 0, then this is the first pointer tracked
-					// it's for panning, but only on the parent or this node
-					// so event.target has to be on this node or it's parent to pan everybody
-
-					// track this single pointer in case a second one gets added
-					event.preventDefault();
-					event.stopPropagation();
-					return true;
-				}
-				// else, the pointer event must have happened on a child node, where pan doesn't apply
-				return false;
+				// else, start the tracking of the pointer
+				event.preventDefault();
+				event.stopPropagation();
+				return true;
 			},
 			move: (previousPointers, changedPointers, event) => {
 				// tracking purposes only, no action
 				if (this._pointerTracker.currentPointers.length === 0) return;
 
-				// If it's a single pointer in a child, ignore it, unless it's a handle
+				// If it's a single pointer in a child, return unless panAnywhere is set
 				if (
 					!panAnywhere &&
 					this._pointerTracker.currentPointers.length === 1 &&
 					!(event.target == this._parentEl || event.target == node)
+				)
+					return;
+
+				// return if single pointer outide of an (optional) handle;
+				// if this._handle is set, then we only want to pan if the event target is contained within the handle
+				if (
+					this._handle &&
+					!this._handle?.contains(event.target as HTMLElement) &&
+					this._pointerTracker.currentPointers.length == 1
 				)
 					return;
 
