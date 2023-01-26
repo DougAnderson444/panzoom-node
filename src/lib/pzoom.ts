@@ -1,16 +1,17 @@
 import pinchZoom from './pinchZoom';
 
+// Svelte action directive
+// see: https://svelte.dev/docs#template-syntax-element-directives-use-action
 export const pzoom = (node, params) => {
-	console.log({ params });
 	let container = node.parentElement || document.body;
 
-	// ensure touch and select action defaults are disable
-	container.style['touch-action'] = 'none';
-	container.style['user-select'] = 'none';
-	container.style['overflow'] = 'hidden';
-	container.style['position'] = 'relative';
+	// ensure touch and select action defaults are disabled
+	container.style['touch-action'] = 'none'; // disable default mobile pin zoom
+	container.style['user-select'] = 'none'; // no highlighting
+	container.style['overflow'] = 'hidden'; // no scroll when child is bigger than parent
+	container.style['position'] = 'relative'; // node is relative to this html element
 
-	node.style['touch-action'] = 'none';
+	node.style['touch-action'] = 'none'; // disable default mobile pin zoom
 	node.style['user-select'] = 'none';
 	node.style['position'] = 'absolute';
 	node.style.width = '100%'; // makes the transfrom origin the same
@@ -36,7 +37,6 @@ export const pzoom = (node, params) => {
 	}
 
 	function handleScaleToHome(e) {
-		// zoomer.scaleTo(1, { allowChangeEvent: true });
 		zoomer.setTransform({ x: 0, y: 0, scale: 1, allowChangeEvent: true });
 	}
 
