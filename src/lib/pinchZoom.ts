@@ -146,9 +146,10 @@ export default class PinchZoom {
 				// tracking purposes only, no action
 				if (this._pointerTracker.currentPointers.length === 0) return;
 
-				// If it's a single pointer in a child, return unless panAnywhere is set
+				// If it's a single pointer in a child, return unless panAnywhere or Handle is set
 				if (
 					!panAnywhere &&
+					!this._handle &&
 					this._pointerTracker.currentPointers.length === 1 &&
 					!(event.target == this._parentEl || event.target == node)
 				)

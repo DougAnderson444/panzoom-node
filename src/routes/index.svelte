@@ -1,8 +1,9 @@
 <script>
-	import { panzoom } from '$lib/panzoom.js';
 	import { pzoom } from '$lib/pzoom';
+	import { tweened } from 'svelte/motion';
+	import { quintOut } from 'svelte/easing';
 	import Spot from '$lib/_components/Spot.svelte';
-	import RangeSlider from 'svelte-range-slider-pips';
+	// import RangeSlider from 'svelte-range-slider-pips';
 
 	let zoomable, container;
 
@@ -17,18 +18,39 @@
 
 	$: if (zoomable?.style?.transform) console.log({ zoomable: zoomable.style.transform });
 
-	function handleRangeChg(e) {
-		zoomable.dispatchEvent(new CustomEvent('scaleTo', { detail: { scale: values[0] } }));
-	}
-
 	const grid = Array.from({ length: count }, (_, i) =>
 		Array.from({ length: count }, (_, j) => ({ id: i * count + j }))
 	);
 
-	function goHome(e) {
-		// dispatch custom event to zoomable element
-		zoomable.dispatchEvent(new CustomEvent('home'));
-	}
+	const getCoords = (e) =>
+		zoomable.style.transform.replace(/px/g, '').match(/[-+]?([0-9]*\.[0-9]+|[0-9]+)/g);
+
+	export const goHome = () => {
+		// use regex to extract x, y, and scale from the zoomable element translate(x px, y px) scale(scale) excluding the trailing 'px'
+		const [x, y, s] = getCoords();
+
+		// convert strings to numbers
+		let view = tweened(
+			{ x: +x, y: +y, s: +s },
+			{
+				duration: 750,
+				easing: quintOut
+			}
+		);
+		view.subscribe(async (v) => {
+			zoomable.dispatchEvent(
+				new CustomEvent('setTransform', {
+					detail: {
+						scale: v.s,
+						x: v.x,
+						y: v.y
+					}
+				})
+			);
+		});
+		view.set({ x: 0, y: 0, s: 1 });
+	};
+
 	const handleScaleChg = (e) => {
 		scale = e.detail.scale;
 		console.log('scale changed', scale);
@@ -48,19 +70,6 @@
 		<div>
 			<button on:click={goHome}>Reset Zoom</button>
 			<br />Zoom Level: {scale}
-			<!-- {#if values?.length}
-				<div data-no-pan>
-					<RangeSlider
-						pips
-						min={0.1}
-						step={0.1}
-						max={scale?.max || 20}
-						float
-						bind:values
-						on:change={handleRangeChg}
-					/>
-				</div>
-			{/if} -->
 		</div>
 	</div>
 	<div
@@ -86,10 +95,10 @@
 	</div>
 </div>
 
-<h2>Using Handle (WIP)</h2>
+<h2>Using Handle (can only pan by dragging on the word "Handle")</h2>
 
-<div style="height:600px">
-	<div style="height:600px; width: 600px; border: 1px solid salmon">
+<div style="height:600px; width: 600px; margin: 1em; border: 4px solid salmon">
+	<div use:pzoom={{ handle }}>
 		<div
 			style="box-shadow: 2px 2px 19px #e0e0e0;
 		-o-box-shadow: 2px 2px 19px #e0e0e0;
@@ -98,15 +107,14 @@
 		-moz-border-radius: 8px;
 		border-radius: 8px;
 		background-color: rgba(250, 128, 114, 0.418);
-		width: 200px;
-		height: 200px;
+		width: 100px;
+		height: 100px;
 		padding: 1em;
 		left: 100px;
 		top: 10px;"
-			use:pzoom={{ handle }}
 		>
 			Drag me by my handle:
-			<span bind:this={handle}>Handle</span>
+			<span bind:this={handle}><b>Handle</b></span>
 		</div>
 	</div>
 </div>
