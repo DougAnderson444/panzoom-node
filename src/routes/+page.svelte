@@ -78,6 +78,7 @@
 		class="zoomable flexbox"
 		bind:this={zoomable}
 		use:pzoom={{ panAnywhere: true }}
+		min-scale="0.5"
 		on:scale={handleScaleChg}
 	>
 		{#if container}
@@ -100,7 +101,7 @@
 <h2>Using Handle (can only pan by dragging on the word "Handle")</h2>
 
 <div style="height:600px; width: 600px; margin: 1em; border: 4px solid salmon">
-	<div use:pzoom={{ handle }}>
+	<div use:pzoom={{ handle }} min-scale="1">
 		<div
 			style="box-shadow: 2px 2px 19px #e0e0e0;
 		-o-box-shadow: 2px 2px 19px #e0e0e0;
@@ -115,7 +116,7 @@
 		left: 100px;
 		top: 10px;"
 		>
-			Drag me by my handle:
+			Drag me by my handle! Minimum scale set to 1
 			<span bind:this={handle}><b>Handle</b></span>
 		</div>
 	</div>
