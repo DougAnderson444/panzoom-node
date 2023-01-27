@@ -8,10 +8,11 @@ One dependency library. Use as vanilla JS or add this as a Svelte action directi
 - [x] Pan
 - [x] Zoom
 - [x] Mobile
-- [x] Pinch to Zoom over DOM tree children
 - [x] Ignore single pointer input and editable elements
-- [x] Disable pan on select event targets via `data-no-pan` dataset
-- [ ] Drag by handle only (TODO: WIP)
+- [x] Optional Pinch to Zoom over DOM tree children (`{ panAnywhere: true }`)
+- [x] Optional Disable pan on select event targets via `data-no-pan` dataset
+- [x] Optional Drag Handle
+- [x] Optional Minimum Scale (`<div min-scale=1>`)
 
 ![Demo](./static/svelte-zoom-action.gif)
 
