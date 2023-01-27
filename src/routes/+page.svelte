@@ -1,4 +1,6 @@
 <script>
+	// @ts-nocheck
+
 	import { pzoom } from '$lib/pzoom';
 	import { tweened } from 'svelte/motion';
 	import { quintOut } from 'svelte/easing';
@@ -142,20 +144,6 @@
 		align-content: stretch;
 		justify-content: space-evenly;
 		align-items: stretch;
-	}
-	.flexitem {
-		margin: 1em;
-		padding: 1em;
-		background-color: lightgray;
-	}
-	.item {
-		/* 		flex: 1; */
-		border: 1px solid grey;
-		height: 30px;
-		width: 50px;
-	}
-	ul {
-		padding: 1em;
 	}
 
 	.menu {

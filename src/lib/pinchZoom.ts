@@ -1,8 +1,7 @@
 // inspired by https://github.com/GoogleChromeLabs/pinch-zoom/blob/master/lib/pinch-zoom.ts
 
-import PointerTracker from '@douganderson444/pointer-tracker';
-import type { Pointer } from '@douganderson444/pointer-tracker'; // separate type out to own line
-import './styles.css';
+import PointerTracker from 'pointer-tracker';
+import type { Pointer } from 'pointer-tracker'; // separate type out to own line
 
 interface Point {
 	clientX: number;
