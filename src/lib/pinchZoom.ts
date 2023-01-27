@@ -320,8 +320,11 @@ export default class PinchZoom {
 	 * Update transform values without checking bounds. This is only called in setTransform.
 	 */
 	private _updateTransform(scale: number, x: number, y: number, allowChangeEvent: boolean) {
-		// Avoid scaling to zero
-		if (scale < this.minScale) return;
+		// Avoid scaling below minimum
+		if (scale < this.minScale) {
+			scale = this.minScale;
+			return;
+		}
 
 		// Return if there's no change
 		if (scale === this.scale && x === this.x && y === this.y) return;
