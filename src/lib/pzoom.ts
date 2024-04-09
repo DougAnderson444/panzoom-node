@@ -50,10 +50,12 @@ export const pzoom = (node, params) => {
 	}
 
 	function handleScaleChange(e) {
-		const scale = e.target.style.transform.match(/scale\((\d+\.?\d*)\)/)[1];
+		let scale = e.target.style.transform.match(/scale\((\d+\.?\d*)\)/);
+		if (!scale || !scale[1]) return;
+
 		node.dispatchEvent(
 			new CustomEvent('scale', {
-				detail: { scale }
+				detail: { scale: scale[1] }
 			})
 		);
 	}
