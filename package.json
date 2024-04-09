@@ -1,6 +1,6 @@
 {
 	"name": "@douganderson444/panzoom-node",
-	"version": "1.2.3",
+	"version": "1.2.4",
 	"main": "index.js",
 	"module": "index.js",
 	"scripts": {
